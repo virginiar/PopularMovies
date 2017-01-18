@@ -11,19 +11,17 @@ import java.util.Scanner;
 
 public final class QueryUtils {
 
-    /** Tag for log messages */
+    /**
+     * Tag for log messages
+     */
     private static final String LOG_TAG = QueryUtils.class.getName();
 
     /* The base for constructing a query for themoviedb.org */
-    final static String BASE_QUERY_URL = "http://api.themoviedb.org/3/movie/";
-    /* Query parameter to get the most popular movies */
-    final static String POPULAR_QUERY = "popular";
-    /* Query parameter to get the most rated movies */
-    final static String TOP_RATED_QUERY = "top_rated";
+    private static final String BASE_QUERY_URL = "http://api.themoviedb.org/3/movie/";
     /* Parameter for the API key */
-    final static String API_KEY_PARAM = "api_key";
+    private static final String API_KEY_PARAM = "api_key";
     /* The required API key to perform the query */
-    final static String MY_APY_KEY = "my_api_key";
+    private static final String MY_APY_KEY = "my_api_key";
 
     /*
     * Build the URL used to query themoviedb.org

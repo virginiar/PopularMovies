@@ -3,6 +3,10 @@ package com.example.android.popularmovies;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -13,7 +17,17 @@ import java.net.URL;
 
 public class MainActivity extends AppCompatActivity {
 
-    TextView mtextView;
+    /**
+     * Tag for log messages
+     */
+    private static final String LOG_TAG = MainActivity.class.getName();
+    /* Query parameter to get the most popular movies */
+    private static final String POPULAR_QUERY = "popular";
+    /* Query parameter to get the most rated movies */
+    private static final String TOP_RATED_QUERY = "top_rated";
+    private TextView mtextView;
+    private URL mQueryUrl;
+    private String mSortBy = POPULAR_QUERY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,9 +38,46 @@ public class MainActivity extends AppCompatActivity {
         Picasso.with(this).load("http://i.imgur.com/DvpvklR.png").into(imageView);
 
         mtextView = (TextView) findViewById(R.id.text_view);
-        URL queryUrl = QueryUtils.buildUrl(QueryUtils.POPULAR_QUERY);
+        mQueryUrl = QueryUtils.buildUrl(mSortBy);
         //mtextView.setText(queryUrl.toString());
-        new MoviesQueryTask().execute(queryUrl);
+        new MoviesQueryTask().execute(mQueryUrl);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main, menu);
+
+        switch (mSortBy) {
+            case POPULAR_QUERY:
+                menu.findItem(R.id.sort_by_popular).setChecked(true);
+                break;
+            case TOP_RATED_QUERY:
+                menu.findItem(R.id.sort_by_top_rated).setChecked(true);
+                break;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.sort_by_popular:
+                mSortBy = POPULAR_QUERY;
+                item.setChecked(true);
+                mQueryUrl = QueryUtils.buildUrl(mSortBy);
+                new MoviesQueryTask().execute(mQueryUrl);
+                break;
+            case R.id.sort_by_top_rated:
+                mSortBy = TOP_RATED_QUERY;
+                item.setChecked(true);
+                mQueryUrl = QueryUtils.buildUrl(mSortBy);
+                new MoviesQueryTask().execute(mQueryUrl);
+                break;
+        }
+        Log.v(LOG_TAG, "Sort by " + mSortBy);
+        return super.onOptionsItemSelected(item);
     }
 
     public class MoviesQueryTask extends AsyncTask<URL, Void, String> {

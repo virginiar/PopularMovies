@@ -3,7 +3,7 @@
     package="com.example.android.popularmovies">
 
     <!-- This is required for Picasso to work. -->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
