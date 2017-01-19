@@ -3,4 +3,6 @@
     <string name="sort_by">Sort By</string>
     <string name="sort_by_popular">Popular</string>
     <string name="sort_by_top_rated">Top Rated</string>
+    <string name="error_message">An error has occurred. Please try again</string>
+    <string name="no_connection">Please review your internet connection</string>
 </resources>

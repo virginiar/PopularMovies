@@ -1,15 +1,17 @@
 package com.example.android.popularmovies;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.widget.ImageView;
+import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-
-import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -23,22 +25,71 @@ public class MainActivity extends AppCompatActivity {
     private static final String TOP_RATED_QUERY = "top_rated";
     /* Query parameter to sort the movies, set POPULAR:QUERY as initial state */
     private String mSortBy = POPULAR_QUERY;
-    /* TextView for testing purposes */
-    private TextView mtextView;
+    /* TextView that is displayed when the list is empty */
+    private TextView mEmptyTextView;
+    /* ProgressBar to show and hide the progress */
+    private ProgressBar mLoadingIndicator;
+    /* TextView for debug purposes*/
+    private TextView mTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mTextView = (TextView) findViewById(R.id.text_view);
+        mEmptyTextView = (TextView) findViewById(R.id.empty_view);
+        mLoadingIndicator = (ProgressBar) findViewById(R.id.loading_indicator);
+
+        // Check the network connectivity
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+
+        if (networkInfo != null && networkInfo.isConnected()) {
+            loadMoviesData();
+        } else {
+            mLoadingIndicator.setVisibility(View.GONE);
+            mEmptyTextView.setText(R.string.no_connection);
+            showErrorMessage();
+        }
+
         /* Testing Picasso library */
-        ImageView imageView = (ImageView) findViewById(R.id.image_view);
-        Picasso.with(this).load("http://i.imgur.com/DvpvklR.png").into(imageView);
+        //ImageView imageView = (ImageView) findViewById(R.id.image_view);
+        //Picasso.with(this).load("http://i.imgur.com/DvpvklR.png").into(imageView);
 
         /* Testing JSON parsing */
-        mtextView = (TextView) findViewById(R.id.text_view);
+        //new MoviesQueryTask().execute(mSortBy);
+
+    }
+
+    /**
+     * Gets the query parameter for sort the movies and makes
+     * an request in a background thread.
+     */
+    private void loadMoviesData() {
+        showMoviesData();
         new MoviesQueryTask().execute(mSortBy);
     }
+
+    /**
+     * Make the View for the movies data visible and
+     * hide the error message View.
+     */
+    private void showMoviesData() {
+        mEmptyTextView.setVisibility(View.GONE);
+        mTextView.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Make the View the error message visible and
+     * hide for the movies data View.
+     */
+    private void showErrorMessage() {
+        mEmptyTextView.setVisibility(View.VISIBLE);
+        mTextView.setVisibility(View.GONE);
+    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -83,6 +134,12 @@ public class MainActivity extends AppCompatActivity {
     public class MoviesQueryTask extends AsyncTask<String, Void, List<Movie>> {
 
         @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mLoadingIndicator.setVisibility(View.VISIBLE);
+        }
+
+        @Override
         protected List<Movie> doInBackground(String... strings) {
             /* If strings is empty or null, return early */
             if (strings.length == 0) {
@@ -103,11 +160,17 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(List<Movie> moviesResult) {
-            if (moviesResult != null && !moviesResult.equals("")) {
+            mLoadingIndicator.setVisibility(View.GONE);
+
+            if (moviesResult != null && !moviesResult.isEmpty()) {
+                showMoviesData();
                 // Test the parsing result of JSON
                 for (Movie movie : moviesResult) {
-                    mtextView.append((movie.getTitle() + "\n"));
+                    mTextView.append((movie.getTitle() + "\n"));
                 }
+            } else {
+                mEmptyTextView.setText(R.string.error_message);
+                showErrorMessage();
             }
         }
     }
