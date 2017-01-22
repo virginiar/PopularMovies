@@ -1,9 +1,12 @@
 package com.example.android.popularmovies;
 
+import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -43,7 +46,14 @@ public class MainActivity extends AppCompatActivity {
         mEmptyTextView = (TextView) findViewById(R.id.empty_view);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.loading_indicator);
 
-        /*
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        GridLayoutManager layoutManager =
+                new GridLayoutManager(this, 2);
+        mRecyclerView.setLayoutManager(layoutManager);
+        mRecyclerView.setHasFixedSize(true);
+        mAdapter = new MovieAdapter();
+        mRecyclerView.setAdapter(mAdapter);
+
         // Check the network connectivity
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -55,16 +65,7 @@ public class MainActivity extends AppCompatActivity {
             mLoadingIndicator.setVisibility(View.GONE);
             mEmptyTextView.setText(R.string.no_connection);
             showErrorMessage();
-        }*/
-
-        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
-        LinearLayoutManager layoutManager =
-                new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-        mRecyclerView.setLayoutManager(layoutManager);
-        mRecyclerView.setHasFixedSize(true);
-        mAdapter = new MovieAdapter();
-        mRecyclerView.setAdapter(mAdapter);
-        loadMoviesData();
+        }
     }
 
     /**

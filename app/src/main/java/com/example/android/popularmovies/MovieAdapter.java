@@ -2,11 +2,12 @@ package com.example.android.popularmovies;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.ImageView;
+
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -14,14 +15,15 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     /* Tag for log messages */
     private static final String LOG_TAG = MovieAdapter.class.getName();
-    /* Array for the data obtained in the database */
+    /* List for the data obtained in the database */
     private List<Movie> mMovieData;
-
-    //private int mNumberItems;
+    /* The base for constructing a query for the poster of a movie */
+    private static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/";
+    /* The size for the poster image */
+    private static final String SIZE_IMAGE_URL = "w185";
 
     /* Default constructor */
-    public MovieAdapter() {
-    }
+    public MovieAdapter() {}
 
     @Override
     public MovieViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
@@ -35,9 +37,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public void onBindViewHolder(MovieViewHolder holder, int position) {
-        Log.d(LOG_TAG, "#" + position);
-        String movieForThisPosition = mMovieData.get(position).getTitle();
-        holder.listItemView.setText(movieForThisPosition);
+        String movieForThisPosition = BASE_IMAGE_URL + SIZE_IMAGE_URL + mMovieData.get(position).getPosterPath();
+        Picasso.with(holder.imageItemView.getContext()).load(movieForThisPosition).into(holder.imageItemView);
     }
 
     @Override
@@ -59,12 +60,12 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
      */
     class MovieViewHolder extends RecyclerView.ViewHolder {
 
-        /* Display the position in the list */
-        TextView listItemView;
+        /* Display the poster of the movie */
+        ImageView imageItemView;
 
         public MovieViewHolder(View itemView) {
             super(itemView);
-            listItemView = (TextView) itemView.findViewById(R.id.list_item_view);
+            imageItemView = (ImageView) itemView.findViewById(R.id.image_item_view);
         }
     }
 }
