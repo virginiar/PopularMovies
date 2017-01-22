@@ -1,11 +1,10 @@
 package com.example.android.popularmovies;
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -30,17 +29,21 @@ public class MainActivity extends AppCompatActivity {
     /* ProgressBar to show and hide the progress */
     private ProgressBar mLoadingIndicator;
     /* TextView for debug purposes*/
-    private TextView mTextView;
+    //private TextView mTextView;
+
+    private MovieAdapter mAdapter;
+    private RecyclerView mRecyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mTextView = (TextView) findViewById(R.id.text_view);
+        //mTextView = (TextView) findViewById(R.id.text_view);
         mEmptyTextView = (TextView) findViewById(R.id.empty_view);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.loading_indicator);
 
+        /*
         // Check the network connectivity
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -52,15 +55,16 @@ public class MainActivity extends AppCompatActivity {
             mLoadingIndicator.setVisibility(View.GONE);
             mEmptyTextView.setText(R.string.no_connection);
             showErrorMessage();
-        }
+        }*/
 
-        /* Testing Picasso library */
-        //ImageView imageView = (ImageView) findViewById(R.id.image_view);
-        //Picasso.with(this).load("http://i.imgur.com/DvpvklR.png").into(imageView);
-
-        /* Testing JSON parsing */
-        //new MoviesQueryTask().execute(mSortBy);
-
+        mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
+        LinearLayoutManager layoutManager =
+                new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        mRecyclerView.setLayoutManager(layoutManager);
+        mRecyclerView.setHasFixedSize(true);
+        mAdapter = new MovieAdapter();
+        mRecyclerView.setAdapter(mAdapter);
+        loadMoviesData();
     }
 
     /**
@@ -78,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void showMoviesData() {
         mEmptyTextView.setVisibility(View.GONE);
-        mTextView.setVisibility(View.VISIBLE);
+        mRecyclerView.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -86,10 +90,9 @@ public class MainActivity extends AppCompatActivity {
      * hide for the movies data View.
      */
     private void showErrorMessage() {
+        mRecyclerView.setVisibility(View.GONE);
         mEmptyTextView.setVisibility(View.VISIBLE);
-        mTextView.setVisibility(View.GONE);
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -164,10 +167,8 @@ public class MainActivity extends AppCompatActivity {
 
             if (moviesResult != null && !moviesResult.isEmpty()) {
                 showMoviesData();
-                // Test the parsing result of JSON
-                for (Movie movie : moviesResult) {
-                    mTextView.append((movie.getTitle() + "\n"));
-                }
+                mAdapter.setMovieData(moviesResult);
+
             } else {
                 mEmptyTextView.setText(R.string.error_message);
                 showErrorMessage();

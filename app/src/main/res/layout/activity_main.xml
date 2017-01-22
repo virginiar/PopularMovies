@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
@@ -11,32 +11,25 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="com.example.android.popularmovies.MainActivity">
 
-    <!-- Empty view is only visible when the list has no items. -->
+    <!-- Empty view is only visible when the list has no items or error. -->
     <TextView
         android:id="@+id/empty_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center"
         android:textAppearance="?android:textAppearanceMedium" />
 
-    <!-- Loading indicator is only shown before the first load -->
+    <!-- Loading indicator is only shown when load -->
     <ProgressBar
         android:id="@+id/loading_indicator"
         style="@style/Widget.AppCompat.ProgressBar"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
-    <TextView
-        android:id="@+id/text_view"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:layout_gravity="center" />
 
-    <ImageView
-        android:id="@+id/image_view"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:padding="16dp"
-        android:scaleType="centerCrop" />
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 
-</LinearLayout>
+</FrameLayout>
