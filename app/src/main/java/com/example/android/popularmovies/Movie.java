@@ -1,42 +1,49 @@
 package com.example.android.popularmovies;
 
-import static android.R.attr.id;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * An {@link Movie} object contains information related to a single movie.
  */
 
-public class Movie {
+public class Movie implements Parcelable {
 
+    public static final Creator<Movie> CREATOR = new Creator<Movie>() {
+        @Override
+        public Movie createFromParcel(Parcel in) {
+            return new Movie(in);
+        }
+
+        @Override
+        public Movie[] newArray(int size) {
+            return new Movie[size];
+        }
+    };
     /* Identifier of the movie in the database */
     private int mId;
-
     /* Title of the movie */
     private String mTitle;
-
     /* Relative path for the movie poster image */
     private String mPosterPath;
-
     /* Plot synopsis of the movie */
     private String mSynopsis;
-
     /* User rating of the movie */
     private String mUserRating;
-
     /* Release date of the movie */
     private String mReleaseDate;
 
     /**
      * Construct a new {@link Movie} object.
      *
-     * @param ìd          is the identifier of the movie in the database
+     * @param id          is the identifier of the movie in the database
      * @param title       is the title of the movie
      * @param posterPath  is the relative path for the movie poster image
      * @param synopsis    is the plot synopsis of the movie
      * @param userRating  is the user rating of the movie
      * @param releaseDate is the release date of the movie
      */
-    public Movie(int ìd, String title, String posterPath,
+    public Movie(int id, String title, String posterPath,
                  String synopsis, String userRating, String releaseDate) {
         this.mId = id;
         this.mPosterPath = posterPath;
@@ -44,6 +51,15 @@ public class Movie {
         this.mSynopsis = synopsis;
         this.mUserRating = userRating;
         this.mReleaseDate = releaseDate;
+    }
+
+    protected Movie(Parcel in) {
+        mId = in.readInt();
+        mTitle = in.readString();
+        mPosterPath = in.readString();
+        mSynopsis = in.readString();
+        mUserRating = in.readString();
+        mReleaseDate = in.readString();
     }
 
     /**
@@ -86,5 +102,21 @@ public class Movie {
      */
     public String getReleaseDate() {
         return mReleaseDate;
+    }
+
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeInt(mId);
+        parcel.writeString(mTitle);
+        parcel.writeString(mPosterPath);
+        parcel.writeString(mSynopsis);
+        parcel.writeString(mUserRating);
+        parcel.writeString(mReleaseDate);
     }
 }

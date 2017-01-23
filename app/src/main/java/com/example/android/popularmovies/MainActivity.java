@@ -1,6 +1,7 @@
 package com.example.android.popularmovies;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -14,7 +15,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.List;
 
@@ -137,7 +137,9 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
     @Override
     public void onClick(Movie movieItem) {
-        Toast.makeText(this, movieItem.getTitle(), Toast.LENGTH_SHORT).show();
+        Intent detailActivity = new Intent(this, DetailActivity.class);
+        detailActivity.putExtra(DetailActivity.EXTRA_MOVIE, movieItem);
+        startActivity(detailActivity);
     }
 
     /* AsyncTask class to perform the request in a new thread */
