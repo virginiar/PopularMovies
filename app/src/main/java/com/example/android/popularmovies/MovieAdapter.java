@@ -21,9 +21,13 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     private static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/";
     /* The size for the poster image */
     private static final String SIZE_IMAGE_URL = "w185";
+    /* On-click handler */
+    private final MovieAdapterOnClickHandler mClickHandler;
 
     /* Default constructor */
-    public MovieAdapter() {}
+    public MovieAdapter(MovieAdapterOnClickHandler clickHandler) {
+        mClickHandler = clickHandler;
+    }
 
     @Override
     public MovieViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
@@ -60,7 +64,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     /**
      * Cache of the children views for a list item.
      */
-    class MovieViewHolder extends RecyclerView.ViewHolder {
+    class MovieViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         /* Display the poster of the movie */
         ImageView imageItemView;
@@ -68,6 +72,19 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         public MovieViewHolder(View itemView) {
             super(itemView);
             imageItemView = (ImageView) itemView.findViewById(R.id.image_item_view);
+            itemView.setOnClickListener(this);
         }
+
+        @Override
+        public void onClick(View view) {
+            int adapterPosition = getAdapterPosition();
+            Movie movieItem = mMovieData.get(adapterPosition);
+            mClickHandler.onClick(movieItem);
+        }
+    }
+
+    /* The interface that receives the onClick messages */
+    interface MovieAdapterOnClickHandler {
+        void onClick(Movie movieItem);
     }
 }

@@ -14,10 +14,11 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler{
 
     /* Tag for log messages */
     private static final String LOG_TAG = MainActivity.class.getName();
@@ -51,7 +52,7 @@ public class MainActivity extends AppCompatActivity {
                 new GridLayoutManager(this, 2);
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
-        mAdapter = new MovieAdapter();
+        mAdapter = new MovieAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
 
         // Check the network connectivity
@@ -132,6 +133,11 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onClick(Movie movieItem) {
+        Toast.makeText(this, movieItem.getTitle(), Toast.LENGTH_SHORT).show();
     }
 
     /* AsyncTask class to perform the request in a new thread */
