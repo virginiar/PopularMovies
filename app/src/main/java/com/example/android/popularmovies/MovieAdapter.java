@@ -13,16 +13,16 @@ import java.util.List;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
+    /* The base for constructing a query for the poster of a movie */
+    static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/";
+    /* The size for the poster image */
+    static final String SIZE_IMAGE_URL = "w185";
     /* Tag for log messages */
     private static final String LOG_TAG = MovieAdapter.class.getName();
+    /* On-click handler */
+    final MovieAdapterOnClickHandler mClickHandler;
     /* List for the data obtained in the database */
     private List<Movie> mMovieData;
-    /* The base for constructing a query for the poster of a movie */
-    private static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/";
-    /* The size for the poster image */
-    private static final String SIZE_IMAGE_URL = "w185";
-    /* On-click handler */
-    private final MovieAdapterOnClickHandler mClickHandler;
 
     /* Default constructor */
     public MovieAdapter(MovieAdapterOnClickHandler clickHandler) {
@@ -61,6 +61,11 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         notifyDataSetChanged();
     }
 
+    /* The interface that receives the onClick messages */
+    interface MovieAdapterOnClickHandler {
+        void onClick(Movie movieItem);
+    }
+
     /**
      * Cache of the children views for a list item.
      */
@@ -81,10 +86,5 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
             Movie movieItem = mMovieData.get(adapterPosition);
             mClickHandler.onClick(movieItem);
         }
-    }
-
-    /* The interface that receives the onClick messages */
-    interface MovieAdapterOnClickHandler {
-        void onClick(Movie movieItem);
     }
 }
