@@ -7,4 +7,6 @@
     <string name="no_connection">Please review your internet connection</string>
     <string name="detail_name">Movie Detail</string>
     <string name="poster_description">Movie Poster</string>
+    <string name="release_date">Release Date</string>
+    <string name="user_rating">Rating</string>
 </resources>
