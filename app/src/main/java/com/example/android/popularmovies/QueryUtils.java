@@ -22,14 +22,16 @@ import java.util.Scanner;
  */
 public final class QueryUtils {
 
+    /* The base for constructing a query for themoviedb.org */
+    static final String BASE_QUERY_URL = "http://api.themoviedb.org/3/movie/";
+    /* Parameter for the API key */
+    static final String API_KEY_PARAM = "api_key";
+    /* Path for detail_reviews */
+    static final String REVIEWS_PATH = "/reviews?";
+    /* The required API key to perform the query */
+    static final String MY_APY_KEY = "[YOUR-API-KEY-HERE]";
     /* Tag for log messages */
     private static final String LOG_TAG = QueryUtils.class.getName();
-    /* The base for constructing a query for themoviedb.org */
-    private static final String BASE_QUERY_URL = "http://api.themoviedb.org/3/movie/";
-    /* Parameter for the API key */
-    private static final String API_KEY_PARAM = "api_key";
-    /* The required API key to perform the query */
-    private static final String MY_APY_KEY = "[YOUR-API-KEY-HERE]";
 
     /**
      * Query the movies database and return a list of {@link Movie} objects.
@@ -53,6 +55,7 @@ public final class QueryUtils {
 
     /*
     * Build the URL used to query themoviedb.org
+    * /movie/popular or /movie/top_rated
     *
     * @param query the keyword that will be queried for
     * @return the URL to use to query the themoviedb.org
@@ -78,7 +81,7 @@ public final class QueryUtils {
      * @return The contents of the HTTP response.
      * @throws IOException Related to network and stream reading
      */
-    private static String getResponseFromHttpUrl(URL url) throws IOException {
+    static String getResponseFromHttpUrl(URL url) throws IOException {
         String jsonResponse = "";
         /*  If the URL is null, then return early */
         if (url == null) {
@@ -151,5 +154,55 @@ public final class QueryUtils {
             Log.e(LOG_TAG, "Problem parsing the movies JSON response. ", e);
         }
         return movies;
+    }
+
+    /*
+     * Build the URL used to query themoviedb.org for detail_reviews
+     * /movie/{id}/detail_reviews
+     *
+     * @param query the id of the movie that will be queried for
+     * @return the URL to use to query the themoviedb.org for detail_reviews
+     */
+    static String buildReviewStringUrl(int movieId) {
+        return BASE_QUERY_URL + String.valueOf(movieId) + REVIEWS_PATH + API_KEY_PARAM + "=" + MY_APY_KEY;
+    }
+
+    /**
+     * This method parses JSON from a web response for detail_reviews and returns
+     * a list of {@link Review} objects
+     *
+     * @param reviewsJson The JSON  response from server
+     * @return Array of Strings describing the detail_reviews data
+     * @throws org.json.JSONException If JSON data cannot be properly parsed
+     */
+    static List<Review> getReviewsFromJson(JSONObject reviewsJson) {
+        /*  If the JSON is empty or null, then return early */
+        if (reviewsJson.length() == 0) {
+            return null;
+        }
+
+        List<Review> reviews = new ArrayList<>();
+
+        /*  Try to parse the JSON String */
+        try {
+
+            JSONArray reviewsArray = reviewsJson.getJSONArray("results");
+
+            for (int i = 0; i < reviewsArray.length(); i++) {
+                JSONObject currentReview = reviewsArray.getJSONObject(i);
+
+                String id = currentReview.getString("id");
+                String author = currentReview.getString("author");
+                String content = currentReview.getString("content");
+
+                Review review = new Review(id, author, content);
+
+                reviews.add(review);
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem parsing the movies JSON response for detail_reviews. ", e);
+            return null;
+        }
+        return reviews;
     }
 }
