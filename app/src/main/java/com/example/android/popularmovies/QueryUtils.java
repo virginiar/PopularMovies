@@ -26,8 +26,10 @@ public final class QueryUtils {
     static final String BASE_QUERY_URL = "http://api.themoviedb.org/3/movie/";
     /* Parameter for the API key */
     static final String API_KEY_PARAM = "api_key";
-    /* Path for detail_reviews */
+    /* Path for reviews */
     static final String REVIEWS_PATH = "/reviews?";
+    /* Path for trailers */
+    static final String TRAILERS_PATH = "/videos?";
     /* The required API key to perform the query */
     static final String MY_APY_KEY = "[YOUR-API-KEY-HERE]";
     /* Tag for log messages */
@@ -157,22 +159,33 @@ public final class QueryUtils {
     }
 
     /*
-     * Build the URL used to query themoviedb.org for detail_reviews
-     * /movie/{id}/detail_reviews
+     * Build the URL used to query themoviedb.org for reviews
+     * /movie/{id}/reviews
      *
      * @param query the id of the movie that will be queried for
-     * @return the URL to use to query the themoviedb.org for detail_reviews
+     * @return the URL to use to query the themoviedb.org for reviews
      */
     static String buildReviewStringUrl(int movieId) {
         return BASE_QUERY_URL + String.valueOf(movieId) + REVIEWS_PATH + API_KEY_PARAM + "=" + MY_APY_KEY;
     }
 
+    /*
+     * Build the URL used to query themoviedb.org for trailers
+     * /movie/{id}/videos
+     *
+     * @param query the id of the movie that will be queried for
+     * @return the URL to use to query the themoviedb.org for trailers
+     */
+    static String buildTrailerStringUrl(int movieId) {
+        return BASE_QUERY_URL + String.valueOf(movieId) + TRAILERS_PATH + API_KEY_PARAM + "=" + MY_APY_KEY;
+    }
+
     /**
-     * This method parses JSON from a web response for detail_reviews and returns
+     * This method parses JSON from a web response for reviews and returns
      * a list of {@link Review} objects
      *
      * @param reviewsJson The JSON  response from server
-     * @return Array of Strings describing the detail_reviews data
+     * @return List of Review describing the reviews data
      * @throws org.json.JSONException If JSON data cannot be properly parsed
      */
     static List<Review> getReviewsFromJson(JSONObject reviewsJson) {
@@ -194,15 +207,59 @@ public final class QueryUtils {
                 String id = currentReview.getString("id");
                 String author = currentReview.getString("author");
                 String content = currentReview.getString("content");
+                String url = currentReview.getString("url");
 
-                Review review = new Review(id, author, content);
+                Review review = new Review(id, author, content, url);
 
                 reviews.add(review);
             }
         } catch (JSONException e) {
-            Log.e(LOG_TAG, "Problem parsing the movies JSON response for detail_reviews. ", e);
+            Log.e(LOG_TAG, "Problem parsing the movies JSON response for reviews. ", e);
             return null;
         }
         return reviews;
+    }
+
+    /**
+     * This method parses JSON from a web response for trailers and returns
+     * a list of {@link Trailer} objects
+     *
+     * @param trailersJson The JSON  response from server
+     * @return List of Trailer describing the trailers data
+     * @throws org.json.JSONException If JSON data cannot be properly parsed
+     */
+    static List<Trailer> getTrailersFromJson(JSONObject trailersJson) {
+        /*  If the JSON is empty or null, then return early */
+        if (trailersJson.length() == 0) {
+            return null;
+        }
+
+        List<Trailer> trailers = new ArrayList<>();
+
+        /*  Try to parse the JSON String */
+        try {
+
+            JSONArray trailersArray = trailersJson.getJSONArray("results");
+
+            for (int i = 0; i < trailersArray.length(); i++) {
+                JSONObject currentTrailer = trailersArray.getJSONObject(i);
+
+                String id = currentTrailer.getString("id");
+                String name = currentTrailer.getString("name");
+                String site = currentTrailer.getString("site");
+                String key = currentTrailer.getString("key");
+
+                // Only add Youtube videos
+                if (site.equalsIgnoreCase("Youtube")) {
+                    Trailer trailer = new Trailer(id, name, site, key);
+                    trailers.add(trailer);
+                }
+
+            }
+        } catch (JSONException e) {
+            Log.e(LOG_TAG, "Problem parsing the movies JSON response for trailers. ", e);
+            return null;
+        }
+        return trailers;
     }
 }

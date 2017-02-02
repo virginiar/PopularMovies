@@ -81,6 +81,8 @@
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_marginStart="@dimen/activity_horizontal_margin" />
 
+        <include layout="@layout/detail_trailers" />
+
         <include layout="@layout/detail_reviews" />
     </LinearLayout>
 

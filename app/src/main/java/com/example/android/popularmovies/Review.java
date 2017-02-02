@@ -7,8 +7,10 @@ public class Review {
     private String mId;
     /* Title of the author */
     private String mAuthor;
-    /* Relative path for the content */
+    /* Content of the review*/
     private String mContent;
+    /* Url of the content */
+    private String mUrl;
 
     /**
      * Construct a new {@link Review} object.
@@ -16,11 +18,13 @@ public class Review {
      * @param id      is the identifier of the review
      * @param author  is the author of the review
      * @param content is the content of the review
+     * @param url     is the url of the review
      */
-    public Review(String id, String author, String content) {
+    public Review(String id, String author, String content, String url) {
         this.mId = id;
         this.mAuthor = author;
         this.mContent = content;
+        this.mUrl = url;
     }
 
     /**
@@ -42,5 +46,12 @@ public class Review {
      */
     public String getContent() {
         return mContent;
+    }
+
+    /**
+     * @return the url of the review
+     */
+    public String getUrl() {
+        return mUrl;
     }
 }

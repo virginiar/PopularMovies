@@ -4,8 +4,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -26,21 +28,29 @@ import org.json.JSONObject;
 
 import java.util.List;
 
-public class DetailActivity extends AppCompatActivity {
+public class DetailActivity extends AppCompatActivity implements
+        TrailerAdapter.TrailerAdapterOnClickHandler,
+        ReviewAdapter.ReviewAdapterOnClickHandler {
 
     /* Tag for intent extra data */
     static final String EXTRA_MOVIE = "EXTRA_MOVIE";
     /* Path for detail_reviews */
-    static final String REVIEWS_PATH = "detail_reviews";
+    static final String REVIEWS_PATH = "reviews";
+    /* Path for youtube videos */
+    static final String YOUTUBE_VIDEOS = "https://www.youtube.com/watch?v=";
     /* Tag for log messages */
     private static final String LOG_TAG = DetailActivity.class.getName();
     RequestQueue queue;
     /* Movie to show its details */
     private Movie mMovie;
     private TextView mEmptyReview;
+    private TextView mEmptyTrailer;
     private ReviewAdapter mReviewAdapter;
+    private TrailerAdapter mTrailerAdapter;
     private RecyclerView mReviewRecyclerView;
+    private RecyclerView mTrailerRecyclerView;
     private ProgressBar mLoadingReview;
+    private ProgressBar mLoadingTrailer;
 
 
     @Override
@@ -57,6 +67,10 @@ public class DetailActivity extends AppCompatActivity {
         mEmptyReview = (TextView) findViewById(R.id.empty_view_review);
         mReviewRecyclerView = (RecyclerView) findViewById(R.id.recycler_view_review);
         mLoadingReview = (ProgressBar) findViewById(R.id.loading_indicator_review);
+
+        mEmptyTrailer = (TextView) findViewById(R.id.empty_view_trailer);
+        mTrailerRecyclerView = (RecyclerView) findViewById(R.id.recycler_view_trailer);
+        mLoadingTrailer = (ProgressBar) findViewById(R.id.loading_indicator_trailer);
 
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(DetailActivity.EXTRA_MOVIE)) {
@@ -77,8 +91,17 @@ public class DetailActivity extends AppCompatActivity {
 
             LinearLayoutManager reviewsLayoutManager = new LinearLayoutManager(this);
             mReviewRecyclerView.setLayoutManager(reviewsLayoutManager);
-            mReviewAdapter = new ReviewAdapter();
+            mReviewAdapter = new ReviewAdapter(this);
             mReviewRecyclerView.setAdapter(mReviewAdapter);
+
+            LinearLayoutManager trailersLayoutManager = new LinearLayoutManager(this);
+            mTrailerRecyclerView.setLayoutManager(trailersLayoutManager);
+            mTrailerAdapter = new TrailerAdapter(this);
+            mTrailerRecyclerView.setAdapter(mTrailerAdapter);
+            DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(
+                    mTrailerRecyclerView.getContext(),
+                    trailersLayoutManager.getOrientation());
+            mTrailerRecyclerView.addItemDecoration(mDividerItemDecoration);
 
             // Check the network connectivity
             ConnectivityManager connMgr = (ConnectivityManager)
@@ -90,8 +113,21 @@ public class DetailActivity extends AppCompatActivity {
             } else {
                 notConnection();
             }
-
         }
+    }
+
+    @Override
+    public void onClick(Trailer trailerItem) {
+        String url = YOUTUBE_VIDEOS + trailerItem.getKey();
+        Intent youtubeActivity = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(youtubeActivity);
+    }
+
+    @Override
+    public void onClick(Review reviewItem) {
+        String url = reviewItem.getUrl();
+        Intent browserActivity = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(browserActivity);
     }
 
     /**
@@ -102,15 +138,20 @@ public class DetailActivity extends AppCompatActivity {
         showData();
         JsonObjectRequest reviewRequest = getReviewsRequest(mMovie.getId());
         queue.add(reviewRequest);
+        JsonObjectRequest trailerRequest = getTrailersRequest(mMovie.getId());
+        queue.add(trailerRequest);
     }
 
     /**
-     * Make the View for the movies data visible and
+     * Make the View for the review data visible and
      * hide the error message View.
      */
     private void showData() {
         mEmptyReview.setVisibility(View.GONE);
+        mTrailerRecyclerView.setVisibility(View.GONE);
         mReviewRecyclerView.setVisibility(View.VISIBLE);
+        mTrailerRecyclerView.setVisibility(View.VISIBLE);
+        mLoadingReview.setVisibility(View.VISIBLE);
         mLoadingReview.setVisibility(View.VISIBLE);
     }
 
@@ -118,10 +159,20 @@ public class DetailActivity extends AppCompatActivity {
      * Make the View the error message visible and
      * hide for the data View.
      */
-    private void showErrorMessage() {
+    private void showReviewErrorMessage() {
         mReviewRecyclerView.setVisibility(View.GONE);
         mEmptyReview.setVisibility(View.VISIBLE);
         mEmptyReview.setText(R.string.not_available);
+    }
+
+    /**
+     * Make the View the error message visible and
+     * hide for the data View.
+     */
+    private void showTrailerErrorMessage() {
+        mTrailerRecyclerView.setVisibility(View.GONE);
+        mEmptyTrailer.setVisibility(View.VISIBLE);
+        mEmptyTrailer.setText(R.string.not_available);
     }
 
     /**
@@ -131,12 +182,14 @@ public class DetailActivity extends AppCompatActivity {
     private void notConnection() {
         mLoadingReview.setVisibility(View.GONE);
         mReviewRecyclerView.setVisibility(View.GONE);
+        mLoadingTrailer.setVisibility(View.GONE);
+        mTrailerRecyclerView.setVisibility(View.GONE);
         mEmptyReview.setVisibility(View.VISIBLE);
         mEmptyReview.setText(R.string.no_connection);
     }
 
     /**
-     * Makes a request for detail_reviews for this movie
+     * Makes a request for reviews for this movie
      *
      * @param id the identifier of the movie
      * @return a JsonObjectRequest to add to the queue
@@ -155,7 +208,7 @@ public class DetailActivity extends AppCompatActivity {
                         if (reviews != null && !reviews.isEmpty()) {
                             mReviewAdapter.setReviewData(reviews);
                         } else {
-                            showErrorMessage();
+                            showReviewErrorMessage();
                         }
                     }
                 },
@@ -163,10 +216,45 @@ public class DetailActivity extends AppCompatActivity {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.e(LOG_TAG, "Error Response", error);
-                        showErrorMessage();
+                        showReviewErrorMessage();
                     }
                 }
         );
         return reviewRequest;
+    }
+
+    /**
+     * Makes a request for trailers for this movie
+     *
+     * @param id the identifier of the movie
+     * @return a JsonObjectRequest to add to the queue
+     */
+    private JsonObjectRequest getTrailersRequest(int id) {
+        String trailerStringUrl = QueryUtils.buildTrailerStringUrl(mMovie.getId());
+
+        JsonObjectRequest trailerRequest = new JsonObjectRequest(
+                Request.Method.GET, trailerStringUrl, null,
+                new Response.Listener<JSONObject>() {
+
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        mLoadingTrailer.setVisibility(View.GONE);
+                        List<Trailer> trailers = QueryUtils.getTrailersFromJson(response);
+                        if (trailers != null && !trailers.isEmpty()) {
+                            mTrailerAdapter.setTrailerData(trailers);
+                        } else {
+                            showTrailerErrorMessage();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(LOG_TAG, "Error Response", error);
+                        showTrailerErrorMessage();
+                    }
+                }
+        );
+        return trailerRequest;
     }
 }

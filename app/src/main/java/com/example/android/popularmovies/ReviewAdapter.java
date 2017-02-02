@@ -11,11 +11,14 @@ import java.util.List;
 
 public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewViewHolder> {
 
+    /* On-click handler */
+    final ReviewAdapter.ReviewAdapterOnClickHandler mClickHandler;
     /* List for the data obtained in the database */
     private List<Review> mReviewData;
 
     /* Default constructor */
-    public ReviewAdapter() {
+    public ReviewAdapter(ReviewAdapterOnClickHandler clickHandler) {
+        mClickHandler = clickHandler;
     }
 
     @Override
@@ -32,7 +35,6 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
     public void onBindViewHolder(ReviewViewHolder holder, int position) {
         Review review = mReviewData.get(position);
         holder.mAuthorTextView.setText(review.getAuthor());
-        holder.mContentTextView.setText(review.getContent());
     }
 
     @Override
@@ -49,19 +51,30 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ReviewView
         notifyDataSetChanged();
     }
 
+    /* The interface that receives the onClick messages */
+    interface ReviewAdapterOnClickHandler {
+        void onClick(Review reviewItem);
+    }
+
     /**
      * Cache of the children views for a movie list item.
      */
-    class ReviewViewHolder extends RecyclerView.ViewHolder {
+    class ReviewViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         /* Display the author of the review */
         TextView mAuthorTextView;
-        TextView mContentTextView;
 
         public ReviewViewHolder(View itemView) {
             super(itemView);
             mAuthorTextView = (TextView) itemView.findViewById(R.id.review_author);
-            mContentTextView = (TextView) itemView.findViewById(R.id.review_content);
+            itemView.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View view) {
+            int adapterPosition = getAdapterPosition();
+            Review reviewItem = mReviewData.get(adapterPosition);
+            mClickHandler.onClick(reviewItem);
         }
     }
 }
