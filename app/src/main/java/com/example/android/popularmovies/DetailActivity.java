@@ -1,20 +1,27 @@
 package com.example.android.popularmovies;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -22,6 +29,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.example.android.popularmovies.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONObject;
@@ -51,6 +59,10 @@ public class DetailActivity extends AppCompatActivity implements
     private RecyclerView mTrailerRecyclerView;
     private ProgressBar mLoadingReview;
     private ProgressBar mLoadingTrailer;
+
+    private boolean mIsFavorite;
+    private Toast mToast;
+    private MenuItem favoriteMenu;
 
 
     @Override
@@ -256,5 +268,114 @@ public class DetailActivity extends AppCompatActivity implements
                 }
         );
         return trailerRequest;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.detail, menu);
+        favoriteMenu = menu.findItem(R.id.favorite_icon);
+        new IsFavoriteTask().execute();
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.favorite_icon:
+                if (mToast != null) {
+                    mToast.cancel();
+                }
+                if (mIsFavorite) {
+                    new DeleteFavoriteTask().execute();
+                    item.setIcon(R.drawable.ic_favorite_white);
+                    mToast = Toast.makeText(this, R.string.added_favorite, Toast.LENGTH_SHORT);
+                } else {
+                    new AddFavoriteTask().execute();
+                    item.setIcon(R.drawable.ic_favorite_accent);
+                    mToast = Toast.makeText(this, R.string.deleted_favorite, Toast.LENGTH_SHORT);
+                }
+                mIsFavorite = !mIsFavorite;
+                break;
+            case android.R.id.home:
+                onBackPressed();
+        }
+        return true;
+    }
+
+    /**
+     * Inner class to query if the movie has been marked as favorite
+     */
+    private class IsFavoriteTask extends AsyncTask<Void, Void, Boolean> {
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            Cursor cursor = getContentResolver().query(
+                    MovieContract.MovieEntry.CONTENT_URI,
+                    null,
+                    MovieContract.MovieEntry.COLUMN_ID + "=?",
+                    new String[]{String.valueOf(mMovie.getId())},
+                    null
+            );
+            boolean isFavorite = false;
+            if (cursor != null) {
+                isFavorite = cursor.getCount() > 0;
+                cursor.close();
+            }
+            Log.d(LOG_TAG, "isFavorited = " + isFavorite);
+            return isFavorite;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean isFavorite) {
+            mIsFavorite = isFavorite;
+            if (mIsFavorite) {
+                favoriteMenu.setIcon(R.drawable.ic_favorite_accent);
+            } else {
+                favoriteMenu.setIcon(R.drawable.ic_favorite_white);
+            }
+        }
+    }
+
+    /**
+     * Inner class to add movie to the Content Provider
+     */
+    private class AddFavoriteTask extends AsyncTask<Void, Void, Uri> {
+
+        @Override
+        protected Uri doInBackground(Void... params) {
+            ContentValues contentValues = new ContentValues();
+            contentValues.put(MovieContract.MovieEntry.COLUMN_ID, mMovie.getId());
+            contentValues.put(MovieContract.MovieEntry.COLUMN_TITLE, mMovie.getTitle());
+            contentValues.put(MovieContract.MovieEntry.COLUMN_POSTER, mMovie.getPosterPath());
+            contentValues.put(MovieContract.MovieEntry.COLUMN_SYNOPSIS, mMovie.getSynopsis());
+            contentValues.put(MovieContract.MovieEntry.COLUMN_RATING, mMovie.getUserRating());
+            contentValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, mMovie.getReleaseDate());
+
+            Uri uri = getContentResolver().insert(
+                    MovieContract.MovieEntry.CONTENT_URI,
+                    contentValues
+            );
+            Log.d(LOG_TAG, "new uri " + uri.toString());
+            return uri;
+        }
+    }
+
+    /**
+     * Inner class to delete a movie from the Content Provider
+     */
+    private class DeleteFavoriteTask extends AsyncTask<Void, Void, Integer> {
+
+        @Override
+        protected Integer doInBackground(Void... params) {
+            int rowsDeleted = getContentResolver().delete(
+                    MovieContract.MovieEntry.CONTENT_URI,
+                    MovieContract.MovieEntry.COLUMN_ID + "=?",
+                    new String[]{String.valueOf(mMovie.getId())}
+            );
+            Log.d(LOG_TAG, "rows deleted " + rowsDeleted);
+            return rowsDeleted;
+        }
     }
 }

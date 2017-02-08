@@ -1,7 +1,10 @@
 package com.example.android.popularmovies;
 
+import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.example.android.popularmovies.data.MovieContract;
 
 /**
  * An {@link Movie} object contains information related to a single movie.
@@ -51,6 +54,20 @@ public class Movie implements Parcelable {
         this.mSynopsis = synopsis;
         this.mUserRating = userRating;
         this.mReleaseDate = releaseDate;
+    }
+
+    /**
+     * Construct a new {@link Movie} object.
+     *
+     * @param cursor is the cursor from the content provider
+     */
+    public Movie(Cursor cursor) {
+        this.mId = cursor.getInt(MovieContract.MovieEntry.INDEX_ID);
+        this.mTitle = cursor.getString(MovieContract.MovieEntry.INDEX_TITLE);
+        this.mPosterPath = cursor.getString(MovieContract.MovieEntry.INDEX_POSTER);
+        this.mSynopsis = cursor.getString(MovieContract.MovieEntry.INDEX_SYNOPSIS);
+        this.mUserRating = cursor.getString(MovieContract.MovieEntry.INDEX_RATING);
+        this.mReleaseDate = cursor.getString(MovieContract.MovieEntry.INDEX_RELEASE);
     }
 
     protected Movie(Parcel in) {

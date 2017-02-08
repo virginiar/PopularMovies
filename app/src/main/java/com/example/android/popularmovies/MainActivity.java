@@ -2,6 +2,7 @@ package com.example.android.popularmovies;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -16,9 +18,12 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.example.android.popularmovies.data.MovieContract;
+
+import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler{
+public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler {
 
     /* Tag for log messages */
     private static final String LOG_TAG = MainActivity.class.getName();
@@ -26,6 +31,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private static final String POPULAR_QUERY = "popular";
     /* Query parameter to get the top rated movies */
     private static final String TOP_RATED_QUERY = "top_rated";
+    /* Query parameter to get the favorite movies */
+    private static final String FAVORITES_QUERY = "favorites";
     /* Query parameter to sort the movies, set POPULAR:QUERY as initial state */
     private String mSortBy = POPULAR_QUERY;
     /* TextView that is displayed when the list is empty */
@@ -100,15 +107,20 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
+        MenuItem sortMenu = menu.findItem(R.id.sort_by_popular);
 
         /* Set checked the selected option */
         switch (mSortBy) {
             case POPULAR_QUERY:
-                menu.findItem(R.id.sort_by_popular).setChecked(true);
+                sortMenu.setChecked(true);
                 break;
 
             case TOP_RATED_QUERY:
-                menu.findItem(R.id.sort_by_top_rated).setChecked(true);
+                sortMenu.setChecked(true);
+                break;
+
+            case FAVORITES_QUERY:
+                sortMenu.setChecked(true);
                 break;
         }
         return true;
@@ -130,6 +142,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 mSortBy = TOP_RATED_QUERY;
                 item.setChecked(true);
                 new MoviesQueryTask().execute(mSortBy);
+                break;
+            case R.id.sort_by_favorites:
+                mSortBy = FAVORITES_QUERY;
+                new MoviesFromFavorites().execute();
+                item.setChecked(true);
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -177,6 +194,48 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             if (moviesResult != null && !moviesResult.isEmpty()) {
                 showMoviesData();
                 mAdapter.setMovieData(moviesResult);
+
+            } else {
+                mEmptyTextView.setText(R.string.error_message);
+                showErrorMessage();
+            }
+        }
+    }
+
+    /* AsyncTask to get the movies in the content provider */
+    private class MoviesFromFavorites extends AsyncTask<Void, Void, List<Movie>> {
+
+        @Override
+        protected List<Movie> doInBackground(Void... params) {
+            Cursor cursor = getContentResolver().query(
+                    MovieContract.MovieEntry.CONTENT_URI,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+
+            List<Movie> moviesResult = new ArrayList<>();
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
+                    Movie movie = new Movie(cursor);
+                    moviesResult.add(movie);
+                }
+                cursor.close();
+            }
+            Log.d(LOG_TAG, "movies " + moviesResult.size());
+            Log.d(LOG_TAG, "first movie " + moviesResult.get(0).getTitle());
+            return moviesResult;
+        }
+
+        @Override
+        protected void onPostExecute(List<Movie> moviesResult) {
+            mLoadingIndicator.setVisibility(View.GONE);
+
+            if (moviesResult != null && !moviesResult.isEmpty()) {
+                showMoviesData();
+                mAdapter.setMovieData(moviesResult);
+                mAdapter.notifyDataSetChanged();
 
             } else {
                 mEmptyTextView.setText(R.string.error_message);

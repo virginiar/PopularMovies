@@ -117,6 +117,11 @@ public class MovieProvider extends ContentProvider {
                         "_id=?",
                         new String[]{id});
                 break;
+            case CODE_MOVIES:
+                moviesDeleted = db.delete(MovieContract.MovieEntry.TABLE_NAME,
+                        selection,
+                        selectionArgs);
+                break;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }

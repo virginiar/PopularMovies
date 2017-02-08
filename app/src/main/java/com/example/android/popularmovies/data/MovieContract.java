@@ -30,5 +30,23 @@ public class MovieContract {
         public static final String COLUMN_SYNOPSIS = "synopsis";
         public static final String COLUMN_RATING = "user_rating";
         public static final String COLUMN_RELEASE_DATE = "release_date";
+
+        /* Columns to show */
+        public static final String[] MOVIES_PROJECTION = {
+                MovieEntry.COLUMN_ID,
+                MovieEntry.COLUMN_TITLE,
+                MovieEntry.COLUMN_POSTER,
+                MovieEntry.COLUMN_SYNOPSIS,
+                MovieEntry.COLUMN_RATING,
+                MovieEntry.COLUMN_RELEASE_DATE
+        };
+
+        /* Constants that represents each column name position */
+        public static final int INDEX_ID = 1;
+        public static final int INDEX_TITLE = 2;
+        public static final int INDEX_POSTER = 3;
+        public static final int INDEX_SYNOPSIS = 4;
+        public static final int INDEX_RATING = 5;
+        public static final int INDEX_RELEASE = 6;
     }
 }
