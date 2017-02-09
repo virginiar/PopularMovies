@@ -1,10 +1,7 @@
 package com.example.android.popularmovies;
 
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -18,10 +15,18 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.android.popularmovies.data.MovieContract;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.example.android.popularmovies.QueryUtils.buildMovieStringUrl;
 
 public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler {
 
@@ -39,8 +44,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private TextView mEmptyTextView;
     /* ProgressBar to show and hide the progress */
     private ProgressBar mLoadingIndicator;
-    /* TextView for debug purposes*/
-    //private TextView mTextView;
+
 
     private MovieAdapter mAdapter;
     private RecyclerView mRecyclerView;
@@ -62,12 +66,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mAdapter = new MovieAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
 
-        // Check the network connectivity
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-
-        if (networkInfo != null && networkInfo.isConnected()) {
+        if (QueryUtils.checkConnection(this)) {
             loadMoviesData();
         } else {
             mLoadingIndicator.setVisibility(View.GONE);
@@ -82,7 +81,8 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
      */
     private void loadMoviesData() {
         showMoviesData();
-        new MoviesQueryTask().execute(mSortBy);
+        JsonObjectRequest movieRequest = getMoviesRequest(mSortBy);
+        SingletonRequest.getInstance(this).addToRequestQueue(movieRequest);
     }
 
     /**
@@ -135,19 +135,24 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             case R.id.sort_by_popular:
                 mSortBy = POPULAR_QUERY;
                 item.setChecked(true);
-                new MoviesQueryTask().execute(mSortBy);
                 break;
 
             case R.id.sort_by_top_rated:
                 mSortBy = TOP_RATED_QUERY;
                 item.setChecked(true);
-                new MoviesQueryTask().execute(mSortBy);
                 break;
+
             case R.id.sort_by_favorites:
                 mSortBy = FAVORITES_QUERY;
-                new MoviesFromFavorites().execute();
                 item.setChecked(true);
                 break;
+        }
+
+        if (mSortBy == FAVORITES_QUERY) {
+            new MoviesFromFavorites().execute();
+        } else {
+            JsonObjectRequest movieRequest = getMoviesRequest(mSortBy);
+            SingletonRequest.getInstance(this).addToRequestQueue(movieRequest);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -159,47 +164,40 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         startActivity(detailActivity);
     }
 
-    /* AsyncTask class to perform the request in a new thread */
-    public class MoviesQueryTask extends AsyncTask<String, Void, List<Movie>> {
+    /**
+     * Makes a request for reviews for this movie
+     *
+     * @param sortBy is the query parameter to sort the movies
+     * @return a JsonObjectRequest to add to the queue
+     */
+    private JsonObjectRequest getMoviesRequest(String sortBy) {
+        String movieStringUrl = buildMovieStringUrl(sortBy);
 
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mLoadingIndicator.setVisibility(View.VISIBLE);
-        }
+        JsonObjectRequest moviesRequest = new JsonObjectRequest(
+                Request.Method.GET, movieStringUrl, null,
+                new Response.Listener<JSONObject>() {
 
-        @Override
-        protected List<Movie> doInBackground(String... strings) {
-            /* If strings is empty or null, return early */
-            if (strings.length == 0) {
-                return null;
-            }
-
-            String queryURL = strings[0];
-            List<Movie> moviesResult = null;
-
-            try {
-                moviesResult = QueryUtils.fetchMovieData(queryURL);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            return moviesResult;
-        }
-
-        @Override
-        protected void onPostExecute(List<Movie> moviesResult) {
-            mLoadingIndicator.setVisibility(View.GONE);
-
-            if (moviesResult != null && !moviesResult.isEmpty()) {
-                showMoviesData();
-                mAdapter.setMovieData(moviesResult);
-
-            } else {
-                mEmptyTextView.setText(R.string.error_message);
-                showErrorMessage();
-            }
-        }
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        mLoadingIndicator.setVisibility(View.GONE);
+                        List<Movie> movies = QueryUtils.getMoviesFromJson(response);
+                        if (movies != null && !movies.isEmpty()) {
+                            showMoviesData();
+                            mAdapter.setMovieData(movies);
+                        } else {
+                            showErrorMessage();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e(LOG_TAG, "Error Response", error);
+                        showErrorMessage();
+                    }
+                }
+        );
+        return moviesRequest;
     }
 
     /* AsyncTask to get the movies in the content provider */
@@ -239,7 +237,6 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
             } else {
                 showMoviesData();
                 mAdapter.setMovieData(moviesResult);
-                mAdapter.notifyDataSetChanged();
             }
         }
     }

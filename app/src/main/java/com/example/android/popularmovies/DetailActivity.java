@@ -1,11 +1,8 @@
 package com.example.android.popularmovies;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -24,11 +21,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.example.android.popularmovies.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
@@ -36,19 +31,19 @@ import org.json.JSONObject;
 
 import java.util.List;
 
+import static com.example.android.popularmovies.QueryUtils.buildReviewStringUrl;
+import static com.example.android.popularmovies.QueryUtils.buildYouTubeStringUrl;
+import static com.example.android.popularmovies.QueryUtils.checkConnection;
+
 public class DetailActivity extends AppCompatActivity implements
         TrailerAdapter.TrailerAdapterOnClickHandler,
         ReviewAdapter.ReviewAdapterOnClickHandler {
 
     /* Tag for intent extra data */
     static final String EXTRA_MOVIE = "EXTRA_MOVIE";
-    /* Path for detail_reviews */
-    static final String REVIEWS_PATH = "reviews";
-    /* Path for youtube videos */
-    static final String YOUTUBE_VIDEOS = "https://www.youtube.com/watch?v=";
+
     /* Tag for log messages */
     private static final String LOG_TAG = DetailActivity.class.getName();
-    RequestQueue queue;
     /* Movie to show its details */
     private Movie mMovie;
     private TextView mEmptyReview;
@@ -92,14 +87,9 @@ public class DetailActivity extends AppCompatActivity implements
             synopsisTextView.setText(mMovie.getSynopsis());
             String userRating = mMovie.getUserRating() + " / 10";
             userRatingTextView.setText(userRating);
-            String imagePath = MovieAdapter.BASE_IMAGE_URL +
-                    MovieAdapter.SIZE_IMAGE_URL +
-                    mMovie.getPosterPath();
+            String imagePath = QueryUtils.buildPosterStringUrl(mMovie.getPosterPath());
             Picasso.with(this).load(imagePath)
                     .into(imageView);
-
-            int movieId = mMovie.getId();
-            queue = Volley.newRequestQueue(this);
 
             LinearLayoutManager reviewsLayoutManager = new LinearLayoutManager(this);
             mReviewRecyclerView.setLayoutManager(reviewsLayoutManager);
@@ -115,12 +105,7 @@ public class DetailActivity extends AppCompatActivity implements
                     trailersLayoutManager.getOrientation());
             mTrailerRecyclerView.addItemDecoration(mDividerItemDecoration);
 
-            // Check the network connectivity
-            ConnectivityManager connMgr = (ConnectivityManager)
-                    getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-
-            if (networkInfo != null && networkInfo.isConnected()) {
+            if (checkConnection(this)) {
                 loadData();
             } else {
                 notConnection();
@@ -130,7 +115,7 @@ public class DetailActivity extends AppCompatActivity implements
 
     @Override
     public void onClick(Trailer trailerItem) {
-        String url = YOUTUBE_VIDEOS + trailerItem.getKey();
+        String url = buildYouTubeStringUrl(trailerItem.getKey());
         Intent youtubeActivity = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         startActivity(youtubeActivity);
     }
@@ -149,9 +134,9 @@ public class DetailActivity extends AppCompatActivity implements
     private void loadData() {
         showData();
         JsonObjectRequest reviewRequest = getReviewsRequest(mMovie.getId());
-        queue.add(reviewRequest);
+        SingletonRequest.getInstance(this).addToRequestQueue(reviewRequest);
         JsonObjectRequest trailerRequest = getTrailersRequest(mMovie.getId());
-        queue.add(trailerRequest);
+        SingletonRequest.getInstance(this).addToRequestQueue(trailerRequest);
     }
 
     /**
@@ -207,7 +192,7 @@ public class DetailActivity extends AppCompatActivity implements
      * @return a JsonObjectRequest to add to the queue
      */
     private JsonObjectRequest getReviewsRequest(int id) {
-        String reviewStringUrl = QueryUtils.buildReviewStringUrl(mMovie.getId());
+        String reviewStringUrl = buildReviewStringUrl(mMovie.getId());
 
         JsonObjectRequest reviewRequest = new JsonObjectRequest(
                 Request.Method.GET, reviewStringUrl, null,

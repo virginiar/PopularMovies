@@ -11,12 +11,11 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import static com.example.android.popularmovies.QueryUtils.BASE_IMAGE_URL;
+import static com.example.android.popularmovies.QueryUtils.SIZE_IMAGE_URL;
+
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
-    /* The base for constructing a query for the poster of a movie */
-    static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/";
-    /* The size for the poster image */
-    static final String SIZE_IMAGE_URL = "w185";
     /* Tag for log messages */
     private static final String LOG_TAG = MovieAdapter.class.getName();
     /* On-click handler */
