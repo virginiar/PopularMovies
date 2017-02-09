@@ -224,22 +224,22 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                 cursor.close();
             }
             Log.d(LOG_TAG, "movies " + moviesResult.size());
-            Log.d(LOG_TAG, "first movie " + moviesResult.get(0).getTitle());
             return moviesResult;
         }
 
         @Override
         protected void onPostExecute(List<Movie> moviesResult) {
             mLoadingIndicator.setVisibility(View.GONE);
-
-            if (moviesResult != null && !moviesResult.isEmpty()) {
+            if (moviesResult == null) {
+                mEmptyTextView.setText(R.string.error_message);
+                showErrorMessage();
+            } else if (moviesResult.isEmpty()) {
+                mEmptyTextView.setText(R.string.no_favorites);
+                showErrorMessage();
+            } else {
                 showMoviesData();
                 mAdapter.setMovieData(moviesResult);
                 mAdapter.notifyDataSetChanged();
-
-            } else {
-                mEmptyTextView.setText(R.string.error_message);
-                showErrorMessage();
             }
         }
     }

@@ -6,6 +6,7 @@
     <string name="sort_by_favorites">Favorites</string>
     <string name="error_message">An error has occurred. Please try again</string>
     <string name="no_connection">Please review your internet connection</string>
+    <string name="no_favorites">No favorites movies added.</string>
     <string name="detail_name">Movie Detail</string>
     <string name="poster_description">Movie Poster</string>
     <string name="release_date">Release Date</string>
