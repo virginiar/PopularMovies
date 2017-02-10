@@ -11,8 +11,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-import static com.example.android.popularmovies.QueryUtils.BASE_IMAGE_URL;
-import static com.example.android.popularmovies.QueryUtils.SIZE_IMAGE_URL;
+import static com.example.android.popularmovies.QueryUtils.buildPosterStringUrl;
 
 public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
@@ -23,7 +22,11 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     /* List for the data obtained in the database */
     private List<Movie> mMovieData;
 
-    /* Default constructor */
+    /**
+     * Creates a MovieAdapter
+     *
+     * @param clickHandler The on-click handler for this adapter
+     */
     public MovieAdapter(MovieAdapterOnClickHandler clickHandler) {
         mClickHandler = clickHandler;
     }
@@ -40,7 +43,8 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
 
     @Override
     public void onBindViewHolder(MovieViewHolder holder, int position) {
-        String movieForThisPosition = BASE_IMAGE_URL + SIZE_IMAGE_URL + mMovieData.get(position).getPosterPath();
+        String posterPath = mMovieData.get(position).getPosterPath();
+        String movieForThisPosition = buildPosterStringUrl(posterPath);
         Picasso.with(holder.imageItemView.getContext())
                 .load(movieForThisPosition)
                 .into(holder.imageItemView);
@@ -58,6 +62,10 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
     public void setMovieData(List<Movie> movieData) {
         mMovieData = movieData;
         notifyDataSetChanged();
+    }
+
+    public List<Movie> getMovies() {
+        return mMovieData;
     }
 
     /* The interface that receives the onClick messages */

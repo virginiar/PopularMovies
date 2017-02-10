@@ -1,6 +1,8 @@
 package com.example.android.popularmovies;
 
+import android.app.LoaderManager;
 import android.content.Intent;
+import android.content.Loader;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -28,7 +30,9 @@ import java.util.List;
 
 import static com.example.android.popularmovies.QueryUtils.buildMovieStringUrl;
 
-public class MainActivity extends AppCompatActivity implements MovieAdapter.MovieAdapterOnClickHandler {
+public class MainActivity extends AppCompatActivity implements
+        MovieAdapter.MovieAdapterOnClickHandler,
+        LoaderManager.LoaderCallbacks<List<Movie>> {
 
     /* Tag for log messages */
     private static final String LOG_TAG = MainActivity.class.getName();
@@ -38,7 +42,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     private static final String TOP_RATED_QUERY = "top_rated";
     /* Query parameter to get the favorite movies */
     private static final String FAVORITES_QUERY = "favorites";
-    /* Query parameter to sort the movies, set POPULAR:QUERY as initial state */
+    /* Tag for saved state for movie list */
+    private static String BUNDLE_MOVIES = "BUNDLE_MOVIES";
+    /* Tag for saved state for sort parameter */
+    private static String BUNDLE_SORT = "BUNDLE_SORT";
+    /* Query parameter to sort the movies, set POPULAR_QUERY as initial state */
     private String mSortBy = POPULAR_QUERY;
     /* TextView that is displayed when the list is empty */
     private TextView mEmptyTextView;
@@ -66,13 +74,29 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
         mAdapter = new MovieAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
 
-        if (QueryUtils.checkConnection(this)) {
+        if (savedInstanceState != null) {
+            mSortBy = savedInstanceState.getString(BUNDLE_SORT);
+            if (savedInstanceState.containsKey(BUNDLE_MOVIES)) {
+                List<Movie> movies = savedInstanceState.getParcelableArrayList(BUNDLE_MOVIES);
+                mAdapter.setMovieData(movies);
+            }
+        } else if (mSortBy == FAVORITES_QUERY) {
+            new MoviesFromFavorites().execute();
+        } else if (QueryUtils.checkConnection(this)) {
             loadMoviesData();
         } else {
-            mLoadingIndicator.setVisibility(View.GONE);
-            mEmptyTextView.setText(R.string.no_connection);
-            showErrorMessage();
+            showErrorMessage(R.string.no_connection);
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        ArrayList<Movie> movies = (ArrayList) mAdapter.getMovies();
+        if (movies != null && !movies.isEmpty()) {
+            outState.putParcelableArrayList(BUNDLE_MOVIES, movies);
+        }
+        outState.putString(BUNDLE_SORT, mSortBy);
+        super.onSaveInstanceState(outState);
     }
 
     /**
@@ -97,8 +121,11 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     /**
      * Make the View the error message visible and
      * hide for the movies data View.
+     * @param message the id for the string message
      */
-    private void showErrorMessage() {
+    private void showErrorMessage(int message) {
+        mEmptyTextView.setText(message);
+        mLoadingIndicator.setVisibility(View.GONE);
         mRecyclerView.setVisibility(View.GONE);
         mEmptyTextView.setVisibility(View.VISIBLE);
     }
@@ -107,23 +134,24 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main, menu);
-        MenuItem sortMenu = menu.findItem(R.id.sort_by_popular);
 
         /* Set checked the selected option */
         switch (mSortBy) {
             case POPULAR_QUERY:
-                sortMenu.setChecked(true);
+                menu.findItem(R.id.sort_by_popular).setChecked(true);
                 break;
 
             case TOP_RATED_QUERY:
-                sortMenu.setChecked(true);
+                menu.findItem(R.id.sort_by_top_rated).setChecked(true);
                 break;
 
             case FAVORITES_QUERY:
-                sortMenu.setChecked(true);
+                menu.findItem(R.id.sort_by_favorites).setChecked(true);
+                break;
+            default:
                 break;
         }
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
 
     @Override
@@ -172,6 +200,7 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
      */
     private JsonObjectRequest getMoviesRequest(String sortBy) {
         String movieStringUrl = buildMovieStringUrl(sortBy);
+        mLoadingIndicator.setVisibility(View.VISIBLE);
 
         JsonObjectRequest moviesRequest = new JsonObjectRequest(
                 Request.Method.GET, movieStringUrl, null,
@@ -179,13 +208,13 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
                     @Override
                     public void onResponse(JSONObject response) {
-                        mLoadingIndicator.setVisibility(View.GONE);
                         List<Movie> movies = QueryUtils.getMoviesFromJson(response);
                         if (movies != null && !movies.isEmpty()) {
+                            mLoadingIndicator.setVisibility(View.GONE);
                             showMoviesData();
                             mAdapter.setMovieData(movies);
                         } else {
-                            showErrorMessage();
+                            showErrorMessage(R.string.error_message);
                         }
                     }
                 },
@@ -193,15 +222,36 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         Log.e(LOG_TAG, "Error Response", error);
-                        showErrorMessage();
+                        showErrorMessage(R.string.error_message);
                     }
                 }
         );
         return moviesRequest;
     }
 
+    @Override
+    public Loader<List<Movie>> onCreateLoader(int id, Bundle args) {
+        return null;
+    }
+
+    @Override
+    public void onLoadFinished(Loader<List<Movie>> loader, List<Movie> data) {
+
+    }
+
+    @Override
+    public void onLoaderReset(Loader<List<Movie>> loader) {
+
+    }
+
     /* AsyncTask to get the movies in the content provider */
     private class MoviesFromFavorites extends AsyncTask<Void, Void, List<Movie>> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            mLoadingIndicator.setVisibility(View.VISIBLE);
+        }
 
         @Override
         protected List<Movie> doInBackground(Void... params) {
@@ -227,14 +277,13 @@ public class MainActivity extends AppCompatActivity implements MovieAdapter.Movi
 
         @Override
         protected void onPostExecute(List<Movie> moviesResult) {
-            mLoadingIndicator.setVisibility(View.GONE);
+
             if (moviesResult == null) {
-                mEmptyTextView.setText(R.string.error_message);
-                showErrorMessage();
+                showErrorMessage(R.string.error_message);
             } else if (moviesResult.isEmpty()) {
-                mEmptyTextView.setText(R.string.no_favorites);
-                showErrorMessage();
+                showErrorMessage(R.string.no_favorites);
             } else {
+                mLoadingIndicator.setVisibility(View.GONE);
                 showMoviesData();
                 mAdapter.setMovieData(moviesResult);
             }

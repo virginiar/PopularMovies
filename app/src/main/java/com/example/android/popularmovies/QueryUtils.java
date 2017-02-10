@@ -3,22 +3,14 @@ package com.example.android.popularmovies;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.net.Uri;
-import android.text.TextUtils;
 import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * Helper methods related to requesting and receiving earthquake data from themoviedb.org.
@@ -28,11 +20,11 @@ public class QueryUtils {
     /* The base for constructing a query for themoviedb.org */
     static final String BASE_QUERY_URL = "http://api.themoviedb.org/3/movie/";
     /* Parameter for the API key */
-    static final String API_KEY_PARAM = "api_key";
+    static final String API_KEY_PARAM = "?api_key=";
     /* Path for reviews */
-    static final String REVIEWS_PATH = "/reviews?";
+    static final String REVIEWS_PATH = "/reviews";
     /* Path for trailers */
-    static final String TRAILERS_PATH = "/videos?";
+    static final String TRAILERS_PATH = "/videos";
     /* The base for constructing a query for the poster of a movie */
     static final String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/";
     /* The size for the poster image */
@@ -57,45 +49,15 @@ public class QueryUtils {
         return networkInfo != null && networkInfo.isConnected();
     }
 
-    /**
-     * Query the movies database and return a list of {@link Movie} objects.
-     *
-     * @param sortBy The sort by criteria to perform the query
-     * @return A list of movies sorted by criteria
-     */
-    public static List<Movie> fetchMovieData(String sortBy) {
-        URL url = buildUrl(sortBy);
-        String jsonResponse = null;
-
-        try {
-            jsonResponse = getResponseFromHttpUrl(url);
-        } catch (IOException e) {
-            Log.e(LOG_TAG, "Problem making the HTTP request. ", e);
-        }
-
-        List<Movie> movies = getMoviesFromJson(jsonResponse);
-        return movies;
-    }
-
     /*
-    * Build the URL used to query themoviedb.org
-    * /movie/popular or /movie/top_rated
-    *
-    * @param query the keyword that will be queried for
-    * @return the URL to use to query the themoviedb.org
+     * Build the URL used to query themoviedb.org for the poster of a movie
+     * /movie/{id}/reviews
+     *
+     * @param posterPath the path to get the poster of the movie that will be queried for
+     * @return the URL to use to query the themoviedb.org for reviews
      */
-    private static URL buildUrl(String query) {
-        Uri builtUri = Uri.parse(BASE_QUERY_URL).buildUpon()
-                .appendPath(query)
-                .appendQueryParameter(API_KEY_PARAM, MY_API_KEY)
-                .build();
-        URL url = null;
-        try {
-            url = new URL(builtUri.toString());
-        } catch (MalformedURLException e) {
-            Log.e(LOG_TAG, "Problem building the URL ", e);
-        }
-        return url;
+    static String buildMovieStringUrl(String sortBy) {
+        return BASE_QUERY_URL + sortBy + API_KEY_PARAM + MY_API_KEY;
     }
 
     /*
@@ -105,90 +67,41 @@ public class QueryUtils {
      * @param posterPath the path to get the poster of the movie that will be queried for
      * @return the URL to use to query the themoviedb.org for reviews
      */
-    static String buildMovieStringUrl(String sortBy) {
-        return BASE_QUERY_URL + sortBy + "?" + API_KEY_PARAM + "=" + MY_API_KEY;
+    static String buildPosterStringUrl(String posterPath) {
+        return BASE_IMAGE_URL + SIZE_IMAGE_URL + posterPath;
     }
 
-    /**
-     * This method returns the entire result from the HTTP response.
+    /*
+     * Build the URL used to query themoviedb.org for the poster of a movie
+     * /movie/{id}/reviews
      *
-     * @param url The URL to fetch the HTTP response from.
-     * @return The contents of the HTTP response.
-     * @throws IOException Related to network and stream reading
+     * @param posterPath the path to get the poster of the movie that will be queried for
+     * @return the URL to use to query the themoviedb.org for reviews
      */
-    static String getResponseFromHttpUrl(URL url) throws IOException {
-        String jsonResponse = "";
-        /*  If the URL is null, then return early */
-        if (url == null) {
-            return jsonResponse;
-        }
-
-        HttpURLConnection urlConnection = null;
-        InputStream inputStream = null;
-
-        try {
-            urlConnection = (HttpURLConnection) url.openConnection();
-            InputStream in = url.openStream();
-
-            Scanner scanner = new Scanner(in);
-            scanner.useDelimiter("\\A");
-
-            boolean hasInput = scanner.hasNext();
-            if (hasInput) {
-                jsonResponse = scanner.next();
-            } else {
-                jsonResponse = null;
-            }
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
-            if (inputStream != null) {
-                inputStream.close();
-            }
-        }
-        return jsonResponse;
+    static String buildYouTubeStringUrl(String key) {
+        return BASE_YOUTUBE_URL + key;
     }
 
-    /**
-     * This method parses JSON from a web response and returns
-     * a list of {@link Movie} objects
+    /*
+     * Build the URL used to query themoviedb.org for reviews
+     * /movie/{id}/reviews
      *
-     * @param moviesJsonString The JSON String response from server
-     * @return Array of Strings describing the movies data
-     * @throws org.json.JSONException If JSON data cannot be properly parsed
+     * @param query the id of the movie that will be queried for
+     * @return the URL to use to query the themoviedb.org for reviews
      */
-    private static List<Movie> getMoviesFromJson(String moviesJsonString) {
-        /*  If the JSON String is empty or null, then return early */
-        if (TextUtils.isEmpty(moviesJsonString)) {
-            return null;
-        }
+    static String buildReviewStringUrl(int movieId) {
+        return BASE_QUERY_URL + String.valueOf(movieId) + REVIEWS_PATH + API_KEY_PARAM + MY_API_KEY;
+    }
 
-        List<Movie> movies = new ArrayList<>();
-
-        /*  Try to parse the JSON String */
-        try {
-            JSONObject baseJsonResponse = new JSONObject(moviesJsonString);
-            JSONArray moviesArray = baseJsonResponse.getJSONArray("results");
-
-            for (int i = 0; i < moviesArray.length(); i++) {
-                JSONObject currentMovie = moviesArray.getJSONObject(i);
-
-                int id = currentMovie.getInt("id");
-                String title = currentMovie.getString("title");
-                String posterPath = currentMovie.getString("poster_path");
-                String synopsis = currentMovie.getString("overview");
-                String userRating = currentMovie.getString("vote_average");
-                String releaseDate = currentMovie.getString("release_date");
-
-                Movie movie = new Movie(id, title, posterPath, synopsis, userRating, releaseDate);
-
-                movies.add(movie);
-            }
-        } catch (JSONException e) {
-            Log.e(LOG_TAG, "Problem parsing the movies JSON response. ", e);
-        }
-        return movies;
+    /*
+     * Build the URL used to query themoviedb.org for trailers
+     * /movie/{id}/videos
+     *
+     * @param query the id of the movie that will be queried for
+     * @return the URL to use to query the themoviedb.org for trailers
+     */
+    static String buildTrailerStringUrl(int movieId) {
+        return BASE_QUERY_URL + String.valueOf(movieId) + TRAILERS_PATH + API_KEY_PARAM + MY_API_KEY;
     }
 
     /**
@@ -228,50 +141,6 @@ public class QueryUtils {
             Log.e(LOG_TAG, "Problem parsing the movies JSON response. ", e);
         }
         return movies;
-    }
-
-    /*
-     * Build the URL used to query themoviedb.org for the poster of a movie
-     * /movie/{id}/reviews
-     *
-     * @param posterPath the path to get the poster of the movie that will be queried for
-     * @return the URL to use to query the themoviedb.org for reviews
-     */
-    static String buildPosterStringUrl(String posterPath) {
-        return BASE_IMAGE_URL + SIZE_IMAGE_URL + posterPath;
-    }
-
-    /*
-     * Build the URL used to query themoviedb.org for the poster of a movie
-     * /movie/{id}/reviews
-     *
-     * @param posterPath the path to get the poster of the movie that will be queried for
-     * @return the URL to use to query the themoviedb.org for reviews
-     */
-    static String buildYouTubeStringUrl(String key) {
-        return BASE_YOUTUBE_URL + key;
-    }
-
-    /*
-     * Build the URL used to query themoviedb.org for reviews
-     * /movie/{id}/reviews
-     *
-     * @param query the id of the movie that will be queried for
-     * @return the URL to use to query the themoviedb.org for reviews
-     */
-    static String buildReviewStringUrl(int movieId) {
-        return BASE_QUERY_URL + String.valueOf(movieId) + REVIEWS_PATH + API_KEY_PARAM + "=" + MY_API_KEY;
-    }
-
-    /*
-     * Build the URL used to query themoviedb.org for trailers
-     * /movie/{id}/videos
-     *
-     * @param query the id of the movie that will be queried for
-     * @return the URL to use to query the themoviedb.org for trailers
-     */
-    static String buildTrailerStringUrl(int movieId) {
-        return BASE_QUERY_URL + String.valueOf(movieId) + TRAILERS_PATH + API_KEY_PARAM + "=" + MY_API_KEY;
     }
 
     /**
