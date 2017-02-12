@@ -8,4 +8,50 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <!-- Title of the movies -->
+    <style name="movieTitle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/movie_title_height</item>
+        <item name="android:background">@color/colorMovieTitle</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textAppearance">?android:textAppearanceLarge</item>
+    </style>
+
+    <!-- Text elements -->
+    <style name="elementText">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_margin">@dimen/activity_horizontal_margin</item>
+    </style>
+
+    <!-- Header elements -->
+    <style name="headerText" parent="elementText">
+        <item name="android:textAllCaps">true</item>
+        <item name="android:layout_margin">@dimen/activity_horizontal_margin</item>
+    </style>
+
+    <!-- Content elements -->
+    <style name="contentText" parent="elementText">
+        <item name="android:textColor">@android:color/black</item>
+    </style>
+
+    <!-- Reviews elements -->
+    <style name="reviewText" parent="contentText">
+        <item name="android:layout_height">@dimen/element_height</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:padding">@dimen/activity_vertical_margin</item>
+    </style>
+
+    <!-- Trailer elements -->
+    <style name="trailerText" parent="reviewText">
+        <item name="android:drawablePadding">@dimen/activity_vertical_margin</item>
+    </style>
+
+    <!-- Line -->
+    <style name="divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/divider_height</item>
+        <item name="android:background">?android:attr/listDivider</item>
+    </style>
+
 </resources>

@@ -93,17 +93,23 @@ public class DetailActivity extends AppCompatActivity implements
 
             LinearLayoutManager reviewsLayoutManager = new LinearLayoutManager(this);
             mReviewRecyclerView.setLayoutManager(reviewsLayoutManager);
+            DividerItemDecoration mDividerReview = new DividerItemDecoration(
+                    mReviewRecyclerView.getContext(),
+                    reviewsLayoutManager.getOrientation());
+            mReviewRecyclerView.addItemDecoration(mDividerReview);
             mReviewAdapter = new ReviewAdapter(this);
             mReviewRecyclerView.setAdapter(mReviewAdapter);
+            mReviewRecyclerView.setNestedScrollingEnabled(false);
 
             LinearLayoutManager trailersLayoutManager = new LinearLayoutManager(this);
             mTrailerRecyclerView.setLayoutManager(trailersLayoutManager);
-            mTrailerAdapter = new TrailerAdapter(this);
-            mTrailerRecyclerView.setAdapter(mTrailerAdapter);
-            DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(
+            DividerItemDecoration mDividerTrailer = new DividerItemDecoration(
                     mTrailerRecyclerView.getContext(),
                     trailersLayoutManager.getOrientation());
-            mTrailerRecyclerView.addItemDecoration(mDividerItemDecoration);
+            mTrailerRecyclerView.addItemDecoration(mDividerTrailer);
+            mTrailerAdapter = new TrailerAdapter(this);
+            mTrailerRecyclerView.setAdapter(mTrailerAdapter);
+            mTrailerRecyclerView.setNestedScrollingEnabled(false);
 
             if (checkConnection(this)) {
                 loadData();
@@ -201,6 +207,7 @@ public class DetailActivity extends AppCompatActivity implements
                     @Override
                     public void onResponse(JSONObject response) {
                         mLoadingReview.setVisibility(View.GONE);
+                        mEmptyReview.setVisibility(View.GONE);
                         List<Review> reviews = QueryUtils.getReviewsFromJson(response);
                         if (reviews != null && !reviews.isEmpty()) {
                             mReviewAdapter.setReviewData(reviews);

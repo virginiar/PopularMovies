@@ -11,7 +11,11 @@
 
         <TextView
             android:id="@+id/movie_title"
-            style="@style/movieTitle" />
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/movie_title_height"
+            android:background="@color/colorMovieTitle"
+            android:gravity="center"
+            android:textAppearance="?android:textAppearanceLarge" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -25,6 +29,7 @@
                 android:id="@+id/movie_image"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/activity_horizontal_margin"
                 android:layout_weight="1"
                 android:adjustViewBounds="true"
                 android:contentDescription="@string/poster_description"
@@ -33,7 +38,9 @@
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
+                android:layout_marginLeft="@dimen/activity_horizontal_margin"
+                android:layout_marginStart="@dimen/activity_horizontal_margin"
+                android:layout_weight="2"
                 android:orientation="vertical">
 
                 <TextView
@@ -52,22 +59,17 @@
                     android:id="@+id/movie_user_rating"
                     style="@style/contentText" />
 
+                <TextView
+                    style="@style/headerText"
+                    android:text="@string/synopsis" />
+
+                <TextView
+                    android:id="@+id/movie_synopsis"
+                    style="@style/contentText" />
+
             </LinearLayout>
 
         </LinearLayout>
-
-        <TextView
-            style="@style/headerText"
-            android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:layout_marginStart="@dimen/activity_horizontal_margin"
-            android:layout_marginTop="@dimen/activity_horizontal_margin"
-            android:text="@string/synopsis" />
-
-        <TextView
-            android:id="@+id/movie_synopsis"
-            style="@style/contentText"
-            android:layout_marginLeft="@dimen/activity_horizontal_margin"
-            android:layout_marginStart="@dimen/activity_horizontal_margin" />
 
         <include layout="@layout/detail_trailers" />
 

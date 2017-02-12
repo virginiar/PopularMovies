@@ -1,8 +1,7 @@
 package com.example.android.popularmovies;
 
-import android.app.LoaderManager;
 import android.content.Intent;
-import android.content.Loader;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -31,8 +30,7 @@ import java.util.List;
 import static com.example.android.popularmovies.QueryUtils.buildMovieStringUrl;
 
 public class MainActivity extends AppCompatActivity implements
-        MovieAdapter.MovieAdapterOnClickHandler,
-        LoaderManager.LoaderCallbacks<List<Movie>> {
+        MovieAdapter.MovieAdapterOnClickHandler {
 
     /* Tag for log messages */
     private static final String LOG_TAG = MainActivity.class.getName();
@@ -53,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements
     /* ProgressBar to show and hide the progress */
     private ProgressBar mLoadingIndicator;
 
-
     private MovieAdapter mAdapter;
     private RecyclerView mRecyclerView;
 
@@ -62,13 +59,15 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //mTextView = (TextView) findViewById(R.id.text_view);
         mEmptyTextView = (TextView) findViewById(R.id.empty_view);
         mLoadingIndicator = (ProgressBar) findViewById(R.id.loading_indicator);
 
+        /* Select the number of columns based on orientation and size */
+        int columnNumber = getGridColumnsNumber();
+
         mRecyclerView = (RecyclerView) findViewById(R.id.recycler_view);
         GridLayoutManager layoutManager =
-                new GridLayoutManager(this, 2);
+                new GridLayoutManager(this, columnNumber);
         mRecyclerView.setLayoutManager(layoutManager);
         mRecyclerView.setHasFixedSize(true);
         mAdapter = new MovieAdapter(this);
@@ -79,8 +78,10 @@ public class MainActivity extends AppCompatActivity implements
             if (savedInstanceState.containsKey(BUNDLE_MOVIES)) {
                 List<Movie> movies = savedInstanceState.getParcelableArrayList(BUNDLE_MOVIES);
                 mAdapter.setMovieData(movies);
+                showMoviesData();
             }
         } else if (mSortBy == FAVORITES_QUERY) {
+            showLoading();
             new MoviesFromFavorites().execute();
         } else if (QueryUtils.checkConnection(this)) {
             loadMoviesData();
@@ -104,9 +105,19 @@ public class MainActivity extends AppCompatActivity implements
      * an request in a background thread.
      */
     private void loadMoviesData() {
-        showMoviesData();
+        showLoading();
         JsonObjectRequest movieRequest = getMoviesRequest(mSortBy);
         SingletonRequest.getInstance(this).addToRequestQueue(movieRequest);
+    }
+
+    /**
+     * Show the loading indicator and hide the
+     * error message View and the movies View.
+     */
+    private void showLoading() {
+        mLoadingIndicator.setVisibility(View.VISIBLE);
+        mEmptyTextView.setVisibility(View.GONE);
+        mRecyclerView.setVisibility(View.GONE);
     }
 
     /**
@@ -114,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements
      * hide the error message View.
      */
     private void showMoviesData() {
+        mLoadingIndicator.setVisibility(View.GONE);
         mEmptyTextView.setVisibility(View.GONE);
         mRecyclerView.setVisibility(View.VISIBLE);
     }
@@ -121,6 +133,7 @@ public class MainActivity extends AppCompatActivity implements
     /**
      * Make the View the error message visible and
      * hide for the movies data View.
+     *
      * @param message the id for the string message
      */
     private void showErrorMessage(int message) {
@@ -175,7 +188,7 @@ public class MainActivity extends AppCompatActivity implements
                 item.setChecked(true);
                 break;
         }
-
+        showLoading();
         if (mSortBy == FAVORITES_QUERY) {
             new MoviesFromFavorites().execute();
         } else {
@@ -200,7 +213,6 @@ public class MainActivity extends AppCompatActivity implements
      */
     private JsonObjectRequest getMoviesRequest(String sortBy) {
         String movieStringUrl = buildMovieStringUrl(sortBy);
-        mLoadingIndicator.setVisibility(View.VISIBLE);
 
         JsonObjectRequest moviesRequest = new JsonObjectRequest(
                 Request.Method.GET, movieStringUrl, null,
@@ -229,35 +241,33 @@ public class MainActivity extends AppCompatActivity implements
         return moviesRequest;
     }
 
-    @Override
-    public Loader<List<Movie>> onCreateLoader(int id, Bundle args) {
-        return null;
-    }
-
-    @Override
-    public void onLoadFinished(Loader<List<Movie>> loader, List<Movie> data) {
-
-    }
-
-    @Override
-    public void onLoaderReset(Loader<List<Movie>> loader) {
-
+    /**
+     * @return the number of columns in the gridview as
+     * function of orientation and size of the screen
+     */
+    private int getGridColumnsNumber() {
+        Boolean landscape = getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_LANDSCAPE;
+        Boolean greatSize = getResources().getConfiguration()
+                .isLayoutSizeAtLeast(Configuration.SCREENLAYOUT_SIZE_LARGE);
+        int columnNumber = 2;
+        if (landscape) {
+            columnNumber += 2;
+        }
+        if (greatSize) {
+            columnNumber += 1;
+        }
+        return columnNumber;
     }
 
     /* AsyncTask to get the movies in the content provider */
     private class MoviesFromFavorites extends AsyncTask<Void, Void, List<Movie>> {
 
         @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mLoadingIndicator.setVisibility(View.VISIBLE);
-        }
-
-        @Override
         protected List<Movie> doInBackground(Void... params) {
             Cursor cursor = getContentResolver().query(
                     MovieContract.MovieEntry.CONTENT_URI,
-                    null,
+                    MovieContract.MovieEntry.MOVIES_PROJECTION,
                     null,
                     null,
                     null
@@ -283,9 +293,10 @@ public class MainActivity extends AppCompatActivity implements
             } else if (moviesResult.isEmpty()) {
                 showErrorMessage(R.string.no_favorites);
             } else {
-                mLoadingIndicator.setVisibility(View.GONE);
-                showMoviesData();
+                Log.d(LOG_TAG, "movie " + moviesResult.get(0).getTitle());
                 mAdapter.setMovieData(moviesResult);
+                showMoviesData();
+
             }
         }
     }

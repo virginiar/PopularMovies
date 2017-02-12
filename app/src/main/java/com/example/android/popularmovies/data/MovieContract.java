@@ -42,11 +42,11 @@ public class MovieContract {
         };
 
         /* Constants that represents each column name position */
-        public static final int INDEX_ID = 1;
-        public static final int INDEX_TITLE = 2;
-        public static final int INDEX_POSTER = 3;
-        public static final int INDEX_SYNOPSIS = 4;
-        public static final int INDEX_RATING = 5;
-        public static final int INDEX_RELEASE = 6;
+        public static final int INDEX_ID = 0;
+        public static final int INDEX_TITLE = 1;
+        public static final int INDEX_POSTER = 2;
+        public static final int INDEX_SYNOPSIS = 3;
+        public static final int INDEX_RATING = 4;
+        public static final int INDEX_RELEASE = 5;
     }
 }
