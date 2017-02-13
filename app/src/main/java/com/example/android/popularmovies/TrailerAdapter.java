@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.example.android.popularmovies.model.Trailer;
+
 import java.util.List;
 
 class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.TrailerViewHolder> {
@@ -16,7 +18,11 @@ class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.TrailerViewHold
     /* List for the data obtained in the database */
     private List<Trailer> mTrailerData;
 
-    /* Default constructor */
+    /**
+     * Creates a new {@link TrailerAdapter}
+     *
+     * @param clickHandler The on-click handler for this adapter
+     */
     public TrailerAdapter(TrailerAdapterOnClickHandler clickHandler) {
         mClickHandler = clickHandler;
     }
@@ -46,6 +52,10 @@ class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.TrailerViewHold
         return mTrailerData.size();
     }
 
+    /**
+     * Updates the list of trailers with the given list
+     * @param trailerData The new list of trailers
+     */
     public void setTrailerData(List<Trailer> trailerData) {
         mTrailerData = trailerData;
         notifyDataSetChanged();
@@ -64,6 +74,7 @@ class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.TrailerViewHold
         /* Display the author of the review */
         TextView mNameTextView;
 
+        /* Default constructor */
         public TrailerViewHolder(View itemView) {
             super(itemView);
             mNameTextView = (TextView) itemView.findViewById(R.id.trailer_name);

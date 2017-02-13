@@ -1,6 +1,6 @@
-package com.example.android.popularmovies;
+package com.example.android.popularmovies.model;
 
-class Trailer {
+public class Trailer {
     /* Identifier for the trailer */
     private String mId;
     /* Name of the trailer */

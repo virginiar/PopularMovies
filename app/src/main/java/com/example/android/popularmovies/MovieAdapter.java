@@ -7,13 +7,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.example.android.popularmovies.model.Movie;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
-import static com.example.android.popularmovies.QueryUtils.buildPosterStringUrl;
+import static com.example.android.popularmovies.utils.QueryUtils.buildPosterStringUrl;
 
-public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
+class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHolder> {
 
     /* Tag for log messages */
     private static final String LOG_TAG = MovieAdapter.class.getName();
@@ -59,11 +60,19 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         return mMovieData.size();
     }
 
+    /**
+     * Update the list of movies with the given list
+     *
+     * @param movieData The new list of movies
+     */
     public void setMovieData(List<Movie> movieData) {
         mMovieData = movieData;
         notifyDataSetChanged();
     }
 
+    /**
+     * @return the list of movies
+     */
     public List<Movie> getMovies() {
         return mMovieData;
     }
@@ -81,6 +90,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.MovieViewHol
         /* Display the poster of the movie */
         ImageView imageItemView;
 
+        /* Default constructor */
         public MovieViewHolder(View itemView) {
             super(itemView);
             imageItemView = (ImageView) itemView.findViewById(R.id.image_item_view);

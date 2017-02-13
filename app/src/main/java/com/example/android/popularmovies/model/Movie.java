@@ -1,4 +1,4 @@
-package com.example.android.popularmovies;
+package com.example.android.popularmovies.model;
 
 import android.database.Cursor;
 import android.os.Parcel;
@@ -12,6 +12,9 @@ import com.example.android.popularmovies.data.MovieContract;
 
 public class Movie implements Parcelable {
 
+    /**
+     * Creator for implementation of Parcelable
+     */
     public static final Creator<Movie> CREATOR = new Creator<Movie>() {
         @Override
         public Movie createFromParcel(Parcel in) {
@@ -23,6 +26,7 @@ public class Movie implements Parcelable {
             return new Movie[size];
         }
     };
+
     /* Identifier of the movie in the database */
     private int mId;
     /* Title of the movie */
@@ -62,12 +66,12 @@ public class Movie implements Parcelable {
      * @param cursor is the cursor from the content provider
      */
     public Movie(Cursor cursor) {
-        this.mId = cursor.getInt(MovieContract.MovieEntry.INDEX_ID);
-        this.mTitle = cursor.getString(MovieContract.MovieEntry.INDEX_TITLE);
-        this.mPosterPath = cursor.getString(MovieContract.MovieEntry.INDEX_POSTER);
-        this.mSynopsis = cursor.getString(MovieContract.MovieEntry.INDEX_SYNOPSIS);
-        this.mUserRating = cursor.getString(MovieContract.MovieEntry.INDEX_RATING);
-        this.mReleaseDate = cursor.getString(MovieContract.MovieEntry.INDEX_RELEASE);
+        this.mId = cursor.getInt(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_ID));
+        this.mTitle = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_TITLE));
+        this.mPosterPath = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_POSTER));
+        this.mSynopsis = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_SYNOPSIS));
+        this.mUserRating = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_RATING));
+        this.mReleaseDate = cursor.getString(cursor.getColumnIndex(MovieContract.MovieEntry.COLUMN_RELEASE_DATE));
     }
 
     protected Movie(Parcel in) {

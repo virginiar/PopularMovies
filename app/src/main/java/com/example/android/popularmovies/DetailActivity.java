@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v4.app.ShareCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -25,15 +26,20 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.android.popularmovies.data.MovieContract;
+import com.example.android.popularmovies.model.Movie;
+import com.example.android.popularmovies.model.Review;
+import com.example.android.popularmovies.model.Trailer;
+import com.example.android.popularmovies.utils.QueryUtils;
+import com.example.android.popularmovies.utils.SingletonRequest;
 import com.squareup.picasso.Picasso;
 
 import org.json.JSONObject;
 
 import java.util.List;
 
-import static com.example.android.popularmovies.QueryUtils.buildReviewStringUrl;
-import static com.example.android.popularmovies.QueryUtils.buildYouTubeStringUrl;
-import static com.example.android.popularmovies.QueryUtils.checkConnection;
+import static com.example.android.popularmovies.utils.QueryUtils.buildReviewStringUrl;
+import static com.example.android.popularmovies.utils.QueryUtils.buildYouTubeStringUrl;
+import static com.example.android.popularmovies.utils.QueryUtils.checkConnection;
 
 public class DetailActivity extends AppCompatActivity implements
         TrailerAdapter.TrailerAdapterOnClickHandler,
@@ -46,18 +52,27 @@ public class DetailActivity extends AppCompatActivity implements
     private static final String LOG_TAG = DetailActivity.class.getName();
     /* Movie to show its details */
     private Movie mMovie;
+    /* If the movie has marked as favorite */
+    private boolean mIsFavorite;
+    /* Toast to show changes in favorite's state */
+    private Toast mToast;
+    /* Menu element to show the correct icon if favorite*/
+    private MenuItem mFavoriteMenu;
+    /* The first trailer */
+    private Trailer mFirstTrailer = null;
+
+    /* TextViews to show error messages */
     private TextView mEmptyReview;
     private TextView mEmptyTrailer;
+    /* Adapters for RecyclerViews */
     private ReviewAdapter mReviewAdapter;
     private TrailerAdapter mTrailerAdapter;
+    /* RecyclerView to inject the trailers and reviews */
     private RecyclerView mReviewRecyclerView;
     private RecyclerView mTrailerRecyclerView;
+    /* ProgressBar to show that a request is running */
     private ProgressBar mLoadingReview;
     private ProgressBar mLoadingTrailer;
-
-    private boolean mIsFavorite;
-    private Toast mToast;
-    private MenuItem favoriteMenu;
 
 
     @Override
@@ -117,6 +132,47 @@ public class DetailActivity extends AppCompatActivity implements
                 notConnection();
             }
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.detail, menu);
+        /* Inflate the correct favorite icon */
+        mFavoriteMenu = menu.findItem(R.id.favorite_icon);
+        new IsFavoriteTask().execute();
+        /* Inflate the share menu */
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.favorite_icon:
+                if (mToast != null) {
+                    mToast.cancel();
+                }
+                if (mIsFavorite) {
+                    new DeleteFavoriteTask().execute();
+                    item.setIcon(R.drawable.ic_favorite_white);
+                    mToast = Toast.makeText(this, R.string.added_favorite, Toast.LENGTH_SHORT);
+                } else {
+                    new AddFavoriteTask().execute();
+                    item.setIcon(R.drawable.ic_favorite_accent);
+                    mToast = Toast.makeText(this, R.string.deleted_favorite, Toast.LENGTH_SHORT);
+                }
+                mIsFavorite = !mIsFavorite;
+                break;
+            case android.R.id.home:
+                onBackPressed();
+                break;
+            case R.id.share_icon:
+                createShareTrailerIntent(mFirstTrailer);
+                break;
+        }
+        return true;
     }
 
     @Override
@@ -246,6 +302,7 @@ public class DetailActivity extends AppCompatActivity implements
                         List<Trailer> trailers = QueryUtils.getTrailersFromJson(response);
                         if (trailers != null && !trailers.isEmpty()) {
                             mTrailerAdapter.setTrailerData(trailers);
+                            mFirstTrailer = trailers.get(0);
                         } else {
                             showTrailerErrorMessage();
                         }
@@ -262,38 +319,20 @@ public class DetailActivity extends AppCompatActivity implements
         return trailerRequest;
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.detail, menu);
-        favoriteMenu = menu.findItem(R.id.favorite_icon);
-        new IsFavoriteTask().execute();
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.favorite_icon:
-                if (mToast != null) {
-                    mToast.cancel();
-                }
-                if (mIsFavorite) {
-                    new DeleteFavoriteTask().execute();
-                    item.setIcon(R.drawable.ic_favorite_white);
-                    mToast = Toast.makeText(this, R.string.added_favorite, Toast.LENGTH_SHORT);
-                } else {
-                    new AddFavoriteTask().execute();
-                    item.setIcon(R.drawable.ic_favorite_accent);
-                    mToast = Toast.makeText(this, R.string.deleted_favorite, Toast.LENGTH_SHORT);
-                }
-                mIsFavorite = !mIsFavorite;
-                break;
-            case android.R.id.home:
-                onBackPressed();
+    /**
+     * @return A new intent to share the first trailer
+     */
+    private void createShareTrailerIntent(Trailer trailer) {
+        String sharedText = getString(R.string.share_text);
+        if (trailer != null) {
+            sharedText += "\n" + QueryUtils.buildYouTubeStringUrl(trailer.getKey());
         }
-        return true;
+        ShareCompat.IntentBuilder
+                .from(this)
+                .setType("text/plain")
+                .setSubject(getString(R.string.share_subject) + mMovie.getTitle())
+                .setText(sharedText)
+                .startChooser();
     }
 
     /**
@@ -323,9 +362,9 @@ public class DetailActivity extends AppCompatActivity implements
         protected void onPostExecute(Boolean isFavorite) {
             mIsFavorite = isFavorite;
             if (mIsFavorite) {
-                favoriteMenu.setIcon(R.drawable.ic_favorite_accent);
+                mFavoriteMenu.setIcon(R.drawable.ic_favorite_accent);
             } else {
-                favoriteMenu.setIcon(R.drawable.ic_favorite_white);
+                mFavoriteMenu.setIcon(R.drawable.ic_favorite_white);
             }
         }
     }

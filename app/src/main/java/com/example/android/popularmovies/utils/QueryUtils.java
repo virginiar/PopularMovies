@@ -1,9 +1,13 @@
-package com.example.android.popularmovies;
+package com.example.android.popularmovies.utils;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.util.Log;
+
+import com.example.android.popularmovies.model.Movie;
+import com.example.android.popularmovies.model.Review;
+import com.example.android.popularmovies.model.Trailer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,7 +45,7 @@ public class QueryUtils {
      * Check the network connectivity
      * @return if the device is connected to Internet
      */
-    static boolean checkConnection(Context context) {
+    public static boolean checkConnection(Context context) {
         // Check the network connectivity
         ConnectivityManager connMgr = (ConnectivityManager)
                 context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -56,7 +60,7 @@ public class QueryUtils {
      * @param posterPath the path to get the poster of the movie that will be queried for
      * @return the URL to use to query the themoviedb.org for reviews
      */
-    static String buildMovieStringUrl(String sortBy) {
+    public static String buildMovieStringUrl(String sortBy) {
         return BASE_QUERY_URL + sortBy + API_KEY_PARAM + MY_API_KEY;
     }
 
@@ -67,7 +71,7 @@ public class QueryUtils {
      * @param posterPath the path to get the poster of the movie that will be queried for
      * @return the URL to use to query the themoviedb.org for reviews
      */
-    static String buildPosterStringUrl(String posterPath) {
+    public static String buildPosterStringUrl(String posterPath) {
         return BASE_IMAGE_URL + SIZE_IMAGE_URL + posterPath;
     }
 
@@ -78,7 +82,7 @@ public class QueryUtils {
      * @param posterPath the path to get the poster of the movie that will be queried for
      * @return the URL to use to query the themoviedb.org for reviews
      */
-    static String buildYouTubeStringUrl(String key) {
+    public static String buildYouTubeStringUrl(String key) {
         return BASE_YOUTUBE_URL + key;
     }
 
@@ -89,7 +93,7 @@ public class QueryUtils {
      * @param query the id of the movie that will be queried for
      * @return the URL to use to query the themoviedb.org for reviews
      */
-    static String buildReviewStringUrl(int movieId) {
+    public static String buildReviewStringUrl(int movieId) {
         return BASE_QUERY_URL + String.valueOf(movieId) + REVIEWS_PATH + API_KEY_PARAM + MY_API_KEY;
     }
 
@@ -100,7 +104,7 @@ public class QueryUtils {
      * @param query the id of the movie that will be queried for
      * @return the URL to use to query the themoviedb.org for trailers
      */
-    static String buildTrailerStringUrl(int movieId) {
+    public static String buildTrailerStringUrl(int movieId) {
         return BASE_QUERY_URL + String.valueOf(movieId) + TRAILERS_PATH + API_KEY_PARAM + MY_API_KEY;
     }
 
@@ -111,7 +115,7 @@ public class QueryUtils {
      * @param moviesJson The JSON response from server
      * @return List of Movie describing the movies data
      */
-    static List<Movie> getMoviesFromJson(JSONObject moviesJson) {
+    public static List<Movie> getMoviesFromJson(JSONObject moviesJson) {
         /*  If the JSON String is empty or null, then return early */
         if (moviesJson.length() == 0) {
             return null;
@@ -150,7 +154,7 @@ public class QueryUtils {
      * @param reviewsJson The JSON  response from server
      * @return List of Review describing the reviews data
      */
-    static List<Review> getReviewsFromJson(JSONObject reviewsJson) {
+    public static List<Review> getReviewsFromJson(JSONObject reviewsJson) {
         /*  If the JSON is empty or null, then return early */
         if (reviewsJson.length() == 0) {
             return null;
@@ -189,7 +193,7 @@ public class QueryUtils {
      * @param trailersJson The JSON  response from server
      * @return List of Trailer describing the trailers data
      */
-    static List<Trailer> getTrailersFromJson(JSONObject trailersJson) {
+    public static List<Trailer> getTrailersFromJson(JSONObject trailersJson) {
         /*  If the JSON is empty or null, then return early */
         if (trailersJson.length() == 0) {
             return null;

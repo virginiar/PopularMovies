@@ -21,13 +21,16 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.android.popularmovies.data.MovieContract;
+import com.example.android.popularmovies.model.Movie;
+import com.example.android.popularmovies.utils.QueryUtils;
+import com.example.android.popularmovies.utils.SingletonRequest;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.android.popularmovies.QueryUtils.buildMovieStringUrl;
+import static com.example.android.popularmovies.utils.QueryUtils.buildMovieStringUrl;
 
 public class MainActivity extends AppCompatActivity implements
         MovieAdapter.MovieAdapterOnClickHandler {
@@ -46,12 +49,14 @@ public class MainActivity extends AppCompatActivity implements
     private static String BUNDLE_SORT = "BUNDLE_SORT";
     /* Query parameter to sort the movies, set POPULAR_QUERY as initial state */
     private String mSortBy = POPULAR_QUERY;
-    /* TextView that is displayed when the list is empty */
-    private TextView mEmptyTextView;
-    /* ProgressBar to show and hide the progress */
-    private ProgressBar mLoadingIndicator;
 
+    /* TextView to show error messages */
+    private TextView mEmptyTextView;
+    /* ProgressBar to show that a request is running */
+    private ProgressBar mLoadingIndicator;
+    /* Adapter for the RecyclerView */
     private MovieAdapter mAdapter;
+    /* RecyclerView to inject the movies */
     private RecyclerView mRecyclerView;
 
     @Override
@@ -98,49 +103,6 @@ public class MainActivity extends AppCompatActivity implements
         }
         outState.putString(BUNDLE_SORT, mSortBy);
         super.onSaveInstanceState(outState);
-    }
-
-    /**
-     * Gets the query parameter for sort the movies and makes
-     * an request in a background thread.
-     */
-    private void loadMoviesData() {
-        showLoading();
-        JsonObjectRequest movieRequest = getMoviesRequest(mSortBy);
-        SingletonRequest.getInstance(this).addToRequestQueue(movieRequest);
-    }
-
-    /**
-     * Show the loading indicator and hide the
-     * error message View and the movies View.
-     */
-    private void showLoading() {
-        mLoadingIndicator.setVisibility(View.VISIBLE);
-        mEmptyTextView.setVisibility(View.GONE);
-        mRecyclerView.setVisibility(View.GONE);
-    }
-
-    /**
-     * Make the View for the movies data visible and
-     * hide the error message View.
-     */
-    private void showMoviesData() {
-        mLoadingIndicator.setVisibility(View.GONE);
-        mEmptyTextView.setVisibility(View.GONE);
-        mRecyclerView.setVisibility(View.VISIBLE);
-    }
-
-    /**
-     * Make the View the error message visible and
-     * hide for the movies data View.
-     *
-     * @param message the id for the string message
-     */
-    private void showErrorMessage(int message) {
-        mEmptyTextView.setText(message);
-        mLoadingIndicator.setVisibility(View.GONE);
-        mRecyclerView.setVisibility(View.GONE);
-        mEmptyTextView.setVisibility(View.VISIBLE);
     }
 
     @Override
@@ -206,6 +168,49 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     /**
+     * Gets the query parameter for sort the movies and makes
+     * an request in a background thread.
+     */
+    private void loadMoviesData() {
+        showLoading();
+        JsonObjectRequest movieRequest = getMoviesRequest(mSortBy);
+        SingletonRequest.getInstance(this).addToRequestQueue(movieRequest);
+    }
+
+    /**
+     * Show the loading indicator and hide the
+     * error message View and the movies View.
+     */
+    private void showLoading() {
+        mLoadingIndicator.setVisibility(View.VISIBLE);
+        mEmptyTextView.setVisibility(View.GONE);
+        mRecyclerView.setVisibility(View.GONE);
+    }
+
+    /**
+     * Make the View for the movies data visible and
+     * hide the error message View.
+     */
+    private void showMoviesData() {
+        mLoadingIndicator.setVisibility(View.GONE);
+        mEmptyTextView.setVisibility(View.GONE);
+        mRecyclerView.setVisibility(View.VISIBLE);
+    }
+
+    /**
+     * Make the View the error message visible and
+     * hide for the movies data View.
+     *
+     * @param message the id for the string message
+     */
+    private void showErrorMessage(int message) {
+        mEmptyTextView.setText(message);
+        mLoadingIndicator.setVisibility(View.GONE);
+        mRecyclerView.setVisibility(View.GONE);
+        mEmptyTextView.setVisibility(View.VISIBLE);
+    }
+
+    /**
      * Makes a request for reviews for this movie
      *
      * @param sortBy is the query parameter to sort the movies
@@ -267,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements
         protected List<Movie> doInBackground(Void... params) {
             Cursor cursor = getContentResolver().query(
                     MovieContract.MovieEntry.CONTENT_URI,
-                    MovieContract.MovieEntry.MOVIES_PROJECTION,
+                    null,
                     null,
                     null,
                     null
