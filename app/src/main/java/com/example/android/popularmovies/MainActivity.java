@@ -44,9 +44,9 @@ public class MainActivity extends AppCompatActivity implements
     /* Query parameter to get the favorite movies */
     private static final String FAVORITES_QUERY = "favorites";
     /* Tag for saved state for movie list */
-    private static String BUNDLE_MOVIES = "BUNDLE_MOVIES";
+    private static final String BUNDLE_MOVIES = "BUNDLE_MOVIES";
     /* Tag for saved state for sort parameter */
-    private static String BUNDLE_SORT = "BUNDLE_SORT";
+    private static final String BUNDLE_SORT = "BUNDLE_SORT";
     /* Query parameter to sort the movies, set POPULAR_QUERY as initial state */
     private String mSortBy = POPULAR_QUERY;
 
@@ -85,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements
                 mAdapter.setMovieData(movies);
                 showMoviesData();
             }
-        } else if (mSortBy == FAVORITES_QUERY) {
+        } else if (mSortBy.equals(FAVORITES_QUERY)) {
             showLoading();
             new MoviesFromFavorites().execute();
         } else if (QueryUtils.checkConnection(this)) {
@@ -151,7 +151,7 @@ public class MainActivity extends AppCompatActivity implements
                 break;
         }
         showLoading();
-        if (mSortBy == FAVORITES_QUERY) {
+        if (mSortBy.equals(FAVORITES_QUERY)) {
             new MoviesFromFavorites().execute();
         } else {
             JsonObjectRequest movieRequest = getMoviesRequest(mSortBy);

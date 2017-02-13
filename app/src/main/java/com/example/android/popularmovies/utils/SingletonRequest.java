@@ -10,9 +10,9 @@ public class SingletonRequest {
     /* The instance of the SingletonRequest */
     private static SingletonRequest mInstance;
     /* The queue to perform the request */
-    private static RequestQueue mRequestQueue;
+    private RequestQueue mRequestQueue;
     /* The application context */
-    private static Context mContext;
+    private Context mContext;
 
     /**
      * Creates a new {@link SingletonRequest}

@@ -34,5 +34,5 @@
     <!-- Share trailer messages -->
     <string name="share_icon">Share</string>
     <string name="share_subject">Great movie! : </string>
-    <string name="share_text">I think that you also love this movie.</string>
+    <string name="share_text">Tell me if you love it.</string>
 </resources>

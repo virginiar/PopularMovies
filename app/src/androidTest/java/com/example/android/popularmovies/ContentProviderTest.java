@@ -3,7 +3,6 @@ package com.example.android.popularmovies;
 
 import android.content.ComponentName;
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.UriMatcher;
@@ -146,8 +145,6 @@ public class ContentProviderTest {
 
 
         Uri uri = contentResolver.insert(MovieContract.MovieEntry.CONTENT_URI, testMovieValues);
-
-        Uri expectedUri = ContentUris.withAppendedId(MovieContract.MovieEntry.CONTENT_URI, 1);
 
         String insertProviderFailed = "Unable to insert item through Provider";
         assertTrue(insertProviderFailed, uri != null);

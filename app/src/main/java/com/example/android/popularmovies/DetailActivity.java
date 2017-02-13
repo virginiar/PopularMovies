@@ -157,11 +157,13 @@ public class DetailActivity extends AppCompatActivity implements
                 if (mIsFavorite) {
                     new DeleteFavoriteTask().execute();
                     item.setIcon(R.drawable.ic_favorite_white);
-                    mToast = Toast.makeText(this, R.string.added_favorite, Toast.LENGTH_SHORT);
+                    mToast = Toast.makeText(this, R.string.deleted_favorite, Toast.LENGTH_SHORT);
+                    mToast.show();
                 } else {
                     new AddFavoriteTask().execute();
                     item.setIcon(R.drawable.ic_favorite_accent);
-                    mToast = Toast.makeText(this, R.string.deleted_favorite, Toast.LENGTH_SHORT);
+                    mToast = Toast.makeText(this, R.string.added_favorite, Toast.LENGTH_SHORT);
+                    mToast.show();
                 }
                 mIsFavorite = !mIsFavorite;
                 break;
@@ -254,7 +256,7 @@ public class DetailActivity extends AppCompatActivity implements
      * @return a JsonObjectRequest to add to the queue
      */
     private JsonObjectRequest getReviewsRequest(int id) {
-        String reviewStringUrl = buildReviewStringUrl(mMovie.getId());
+        String reviewStringUrl = buildReviewStringUrl(id);
 
         JsonObjectRequest reviewRequest = new JsonObjectRequest(
                 Request.Method.GET, reviewStringUrl, null,
@@ -290,7 +292,7 @@ public class DetailActivity extends AppCompatActivity implements
      * @return a JsonObjectRequest to add to the queue
      */
     private JsonObjectRequest getTrailersRequest(int id) {
-        String trailerStringUrl = QueryUtils.buildTrailerStringUrl(mMovie.getId());
+        String trailerStringUrl = QueryUtils.buildTrailerStringUrl(id);
 
         JsonObjectRequest trailerRequest = new JsonObjectRequest(
                 Request.Method.GET, trailerStringUrl, null,
@@ -320,12 +322,12 @@ public class DetailActivity extends AppCompatActivity implements
     }
 
     /**
-     * @return A new intent to share the first trailer
+     * Creates a new intent to share the first trailer
      */
     private void createShareTrailerIntent(Trailer trailer) {
         String sharedText = getString(R.string.share_text);
         if (trailer != null) {
-            sharedText += "\n" + QueryUtils.buildYouTubeStringUrl(trailer.getKey());
+            sharedText += "\n\n" + QueryUtils.buildYouTubeStringUrl(trailer.getKey());
         }
         ShareCompat.IntentBuilder
                 .from(this)

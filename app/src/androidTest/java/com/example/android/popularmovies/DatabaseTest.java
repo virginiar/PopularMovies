@@ -26,7 +26,7 @@ import static org.junit.Assert.fail;
 @RunWith(AndroidJUnit4.class)
 public class DatabaseTest {
 
-    /* Context used to perform operations on the database and create WaitlistDbHelper */
+    /* Context used to perform operations on the database and create MovieDbHelper */
     private final Context mContext = InstrumentationRegistry.getTargetContext();
     /* Class reference to help load the constructor on runtime */
     private final Class mDbHelperClass = MovieDbHelper.class;
@@ -52,7 +52,7 @@ public class DatabaseTest {
         SQLiteOpenHelper dbHelper =
                 (SQLiteOpenHelper) mDbHelperClass.getConstructor(Context.class).newInstance(mContext);
 
-        /* Use WaitlistDbHelper to get access to a writable database */
+        /* Use MovieDbHelper to get access to a writable database */
         SQLiteDatabase database = dbHelper.getWritableDatabase();
 
 
@@ -97,7 +97,7 @@ public class DatabaseTest {
         SQLiteOpenHelper dbHelper =
                 (SQLiteOpenHelper) mDbHelperClass.getConstructor(Context.class).newInstance(mContext);
 
-        /* Use WaitlistDbHelper to get access to a writable database */
+        /* Use MovieDbHelper to get access to a writable database */
         SQLiteDatabase database = dbHelper.getWritableDatabase();
 
         ContentValues testValues = new ContentValues();
@@ -246,11 +246,13 @@ public class DatabaseTest {
                 null,
                 null);
 
+
         /* Cursor.moveToFirst will return false if there are no records returned from your query */
         assertFalse("Database doesn't seem to have been dropped successfully when upgrading",
                 wCursor.moveToFirst());
 
         tableNameCursor.close();
+        wCursor.close();
         database.close();
     }
 
